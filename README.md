@@ -148,7 +148,32 @@ If you don't transpile your TypeScript into JavaScript you'll get this error mes
  SyntaxError: Cannot use import statement outside a module
 ```
 
-Now you've completed Firebase initialization! We can now write some Cloud Functions.
+Now you've completed Firebase initialization!
+
+# Call and trigger Cloud Functions
+
+Cloud Functions for Firebase can be executed in three ways:
+
+* Call a Cloud Function from your app or front end framework such as Angular or React with an HTTPS callable function.
+* Call a Cloud Function via [HTTP request](https://firebase.google.com/docs/functions/http-events) from a back end framework such as Express.
+* Trigger a Cloud Function from a write to Firestore or another database.
+
+I don't use Express so I won't talk about calling Cloud Functions with HTTP requests.
+
+## Callable vs. triggerable functions
+
+To execute a Cloud Function from your app or front-end framework, write a HTTPS callable Cloud Function. The code is simple, the execution is fast, and your Cloud Functions returns the resulting data to your app or front-end.
+
+You can trigger a Cloud Function by writing to your database from your app or front-end framework but this isn't as good. It's more code, especially if you want to return data to your app or front end. And writing to your database is slower. If your app or front-end wants to get data from an API, when the data comes back your Cliud Function has to write the data to your database. Then you set up an Observer in your app or front-end to listen for changes in your database. This is a lot of code. Then when the data comes back you'll want to unsubscribe the listener. I haven't found a clean way to unscubscribe the listener when the data comes back.
+
+If you want to use a listener for a long time, i.e., for many data changes in your database, then triggering a Cloud Function with a database write might make sense. But if your app or front-end calls a Cloud Function to get data once from an API, this isn't what listeners are good at. It's better to use a HTTPS callable Cloud Function.
+
+If your Cloud Function triggers from events in your database, not from your app or front-end, this is where you use a triggerable Cloud Function.
+
+## HTTPS callable function
+
+
+
 
 
 
