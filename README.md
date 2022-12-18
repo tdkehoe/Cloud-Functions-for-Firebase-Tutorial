@@ -111,7 +111,7 @@ Open `functions/tsconfig.json`. Add
 "moduleResolution": "node",
 ```
 
-### Transpile (NOT OPTIONAL!)
+### Transpile TypeScript into JavaScript (NOT OPTIONAL!)
 
 Open `functions/src/index.ts`. Remove the comments from the default function `helloWorld`.
 
