@@ -82,17 +82,18 @@ npm install -g typescript
 
 ### Set up emulators
 
-You might be asked to set up the emulators in the middle of setting up TypeScript. Select `Firestore` and `Storage`.
+You might be asked to set up the emulators in the middle of setting up TypeScript. Select `Firestore`, 'Functions`, and `Storage`.
 
 ### Update npm packages and `package.json` (optional)
 
-Check what version was installed.
+You should have two `package.json` files, one for your app or front-end framework and one for your Cloud Functions.
 
 ```
-tsc -v
+MyProject/`package.json` // app or front-end framework
+MyProject/functions/`package/json` // Cloud Functions
 ```
 
-Check what version of Firebase packages you have.
+In your `functions` folder, check your npm packages versions:
 
 ```
 npm list
