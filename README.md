@@ -170,7 +170,21 @@ If you want to use a listener for a long time, i.e., for many data changes in yo
 
 If your Cloud Function triggers from events in your database, not from your app or front-end, this is where you use a triggerable Cloud Function.
 
-## HTTPS callable function
+## HTTPS callable functions
+
+Copy and paste this Cloud Function in `index.ts`:
+
+```js
+export const upperCaseMe = functions.https.onCall((data, context) => {
+    const original = data.text;
+    const uppercase = original.toUpperCase();
+    functions.logger.log('addMessage', original, uppercase);
+    return uppercase;
+});
+```
+
+
+
 
 
 
