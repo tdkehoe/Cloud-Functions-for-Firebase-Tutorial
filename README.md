@@ -80,6 +80,10 @@ Install TypeScript globally.
 npm install -g typescript
 ```
 
+### Set up emulators
+
+You might be asked to set up the emulators in the middle of setting up TypeScript. Select `Firestore` and `Storage`.
+
 ### Update npm packages and `package.json` (optional)
 
 Check what version was installed.
