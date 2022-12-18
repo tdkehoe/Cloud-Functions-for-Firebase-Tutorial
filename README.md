@@ -31,10 +31,15 @@ Install the Firebase CLI globally.
 npm install -g firebase-tools
 ```
 
-Make a directory for your project and install the Firebase Functions and Firebase Admin packages locally.
+Make a directory for your project and spin up a new app or front-end framework.
 
 ```
-mkdir MyProject
+ng new MyProject
+```
+
+In the project directory, install the Firebase Functions and Firebase Admin packages locally.
+
+```
 cd MyProject
 npm install firebase-functions
 npm install firebase-admin
@@ -174,6 +179,7 @@ If your Cloud Function triggers from events in your database, not from your app 
 
 Copy and paste this Cloud Function in `index.ts`:
 
+*index.js*
 ```js
 export const upperCaseMe = functions.https.onCall((data, context) => {
     const original = data.text;
@@ -183,6 +189,57 @@ export const upperCaseMe = functions.https.onCall((data, context) => {
 });
 ```
 
+Make a button in your app or front-end framework:
+
+*app.component.html*
+```html
+<h3>Call cloud function</h3>
+<form (ngSubmit)="callMe(messageText)">
+    <input type="text" [(ngModel)]="messageText" name="message" placeholder="message" required>
+    <button type="submit" value="Submit">Submit</button>
+</form>
+```
+
+*app.component.ts*
+```js
+import { Component } from '@angular/core';
+import { getFunctions, httpsCallable, httpsCallableFromURL } from "firebase/functions";
+import { initializeApp } from 'firebase/app';
+import { environment } from '../environments/environment';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  firebaseConfig = environment.firebaseConfig;
+  firebaseApp = initializeApp(this.firebaseConfig);
+
+
+  messageText: string | null = null;
+  functions = getFunctions(this.firebaseApp);
+
+  callMe(messageText: string | null) {
+    console.log("Calling Cloud Function: " + messageText);
+    // const addMessage = httpsCallable(this.functions, 'addMessage'); // throws CORS error
+    const addMessage = httpsCallableFromURL(this.functions, 'http://localhost:5001/triggerable-functions-project/us-central1/addMessage');
+    addMessage({ text: messageText })
+      .then((result) => {
+        console.log(result.data)
+      })
+      .catch((error) => {
+        console.error(error);
+      });;
+  };
+}
+
+```
+
+
+
+
+`app.component.ts`, write 
 
 
 
