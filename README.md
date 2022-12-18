@@ -178,7 +178,7 @@ Copy and paste this Cloud Function in `index.ts`:
 export const upperCaseMe = functions.https.onCall((data, context) => {
     const original = data.text;
     const uppercase = original.toUpperCase();
-    functions.logger.log('addMessage', original, uppercase);
+    functions.logger.log('upperCaseMe', original, uppercase);
     return uppercase;
 });
 ```
