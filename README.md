@@ -194,7 +194,7 @@ export const upperCaseMe = functions.https.onCall((data, context) => {
 });
 ```
 
-Make a button in your app or front-end framework:
+Make a button in your app or front-end framework. The following code is for Angular.
 
 *app.component.html*
 ```html
@@ -203,6 +203,30 @@ Make a button in your app or front-end framework:
     <input type="text" [(ngModel)]="messageText" name="message" placeholder="message" required>
     <button type="submit" value="Submit">Submit</button>
 </form>
+```
+
+Import `FormsModule`:
+
+*app.module.ts*
+```js
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+
+import { FormsModule } from '@angular/forms';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
 ```
 
 *app.component.ts*
@@ -227,9 +251,9 @@ export class AppComponent {
 
   callMe(messageText: string | null) {
     console.log("Calling Cloud Function: " + messageText);
-    // const addMessage = httpsCallable(this.functions, 'addMessage'); // throws CORS error
-    const addMessage = httpsCallableFromURL(this.functions, 'http://localhost:5001/triggerable-functions-project/us-central1/addMessage');
-    addMessage({ text: messageText })
+    // const addMessage = httpsCallable(this.functions, 'callMe'); // throws CORS error
+    const callMe = httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/callMe');
+    callMe({ text: messageText })
       .then((result) => {
         console.log(result.data)
       })
@@ -244,7 +268,6 @@ export class AppComponent {
 
 
 
-`app.component.ts`, write 
 
 
 
