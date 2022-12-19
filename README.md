@@ -503,11 +503,11 @@ Cloud Functions are written in Node.js. Open `functions/package.json` and check 
 
 Cloud Functions currently use Node 16. This will change at some point to Node 18.
 
-Node is a version of JavaScript (or transpiled TypeScript). Node does some things differently from standard JavaScript, in particular, file handling. We touch on this later.
+Node is a version of JavaScript (or transpiled TypeScript). Node does some things differently from standard JavaScript, in particular, file handling and streaming data.
 
 ## Initialize `admin`
 
-The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. If you're writing in JavaScript, just use the CommonJS module syntax (`require`)
+The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. If you're writing in JavaScript, just use the CommonJS module syntax (`require`).
 
 *index.ts`
 ```
@@ -553,16 +553,16 @@ admin.firestore().collection('MyCollection').doc('MyDocument').get()
   
 ## Firestore get, set, add, update, delete, listDocuments
 
-*Do not* use the Firebase Web version 9 keywords `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These keywords will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
+*Do not* use the Firebase Web version 9 methods `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These methods will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
 
-Instead, you can use these keywords to write Cloud Functions with the Firestore database:
+Instead, you can use these methods to write Cloud Functions with the Firestore database:
 
 * set
 * update
 * get
 * delete
 
-I can't find documentation for Cloud Functions keywords. The closest I can find is for the [Cloud Firestore: Node.js Client](https://cloud.google.com/nodejs/docs/reference/firestore/latest). 
+I can't find documentation for Cloud Functions methods. The closest I can find is for the [Cloud Firestore: Node.js Client](https://cloud.google.com/nodejs/docs/reference/firestore/latest). 
 
 ### CREATE: `set`
 
@@ -670,9 +670,9 @@ This will delete a document.
 admin.firestore().collection('MyCollection').doc('MyDocument').delete()
 ```
 
-### Other keywords
+### Other methods
 
-There may be other keywords, such as `add`. The difference between `add` and `set` is that `add` makes a new document when `set` writes data to an existing document that you've identified by its `documentID`.
+There may be other methods, such as `add`. The difference between `add` and `set` is that `add` makes a new document when `set` writes data to an existing document that you've identified by its `documentID`.
 
 Another method I've used is `listDocuments()`. This code lists the documents in a collection.
 
@@ -693,6 +693,36 @@ admin.firestore().collection('Videos').doc(longLanguage).collection('Translation
 
 ## Storage
 
+As far as I know there are no methods for Storage. Instead, I use Node.js, which is powerful but difficult to learn. Here's how I wrote a file to Storage:
+
+```js
+const storage = new Storage({ projectId: 'my-projectId' });
+const bucket = storage.bucket('my-projectId.appspot.com');
+
+var file = bucket.file('Audio/Spanish/' + longAccent + '/' + myWordFile);
+
+const options = { // construct the file to write
+          metadata: {
+            contentType: 'audio/mpeg',
+            metadata: {
+              source: 'Google Text-to-Speech',
+              languageCode: 'es-ES',
+              gender: 'Female'
+            },
+          }
+};
+     
+const [response] = await client.synthesizeSpeech(request);
+await file.save(response.audioContent, options)
+        .then(function() {
+        ...do stuff
+        }
+        .catch(function(error) {
+                console.error(error);
+         }); 
+```
+
+Don't try to copy that code! This is just an example showing Node.js methods such as `file.save`.
 
 
 
