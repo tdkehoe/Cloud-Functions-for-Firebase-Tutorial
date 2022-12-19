@@ -299,7 +299,7 @@ export class AppComponent {
 
   callMe(messageText: string | null) {
     console.log("Calling Cloud Function: " + messageText);
-    // const addMessage = httpsCallable(this.functions, 'upperCaseMe'); // throws CORS error
+    // const upperCaseMe = httpsCallable(this.functions, 'upperCaseMe');
     const upperCaseMe = httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/upperCaseMe');
     upperCaseMe({ text: messageText })
       .then((result) => {
@@ -422,7 +422,13 @@ You can see the log from the line `functions.logger.log('upperCaseMe', original,
 
 Finally the emulator throws an error: `Your function timed out after ~60s.` This seems to be a bug in the emulator. I ignore it.
 
-## Call your Cloud Function
+## Call your Cloud Function without the URL
+
+In `app.component.ts`, remove the comments from the line with `httpsCallable` and comment out the line with `httpsCallableFromURL`.
+
+When I call the function now the emulator logs show that it executes correctly but my browser log shows that it returns `null`. I don't know what the problme is.
+
+
 
 
 
