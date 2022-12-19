@@ -724,6 +724,38 @@ await file.save(response.audioContent, options)
 
 Don't try to copy that code! This is just an example showing Node.js methods such as `file.save`.
 
+### `uploadBytes` with `['rawBody']`
+
+But wait! There is an easy way to write files to Storage from Cloud Functions. [Sounds of thin ice creaking.]
+
+```js
+import { getStorage, ref, uploadBytes, uploadString, connectStorageEmulator } from "firebase/storage";
+
+let file = await got('https://audio.oxforddictionaries.com/en/mp3/winter__us_2.mp3');
+await uploadBytes(storageRef, file['rawBody'], metadata);
+```
+
+`firebase/storage` is a package intended for your app or front-end. It's not intended for Cloud Functions.
+
+`uploadBytes` is a method for writing a file to Storage. In other words, your data must be a file. Data downloaded from an API isn't a file. In JavaScript you can easily make a file with `new File()` but this isn't available in Node.js. I tried to convert a photo on my laptop's drive into a file using WebPack. It was a nightmare.
+
+Then you have to import the file into `index.ts`, which requires converting the file into a CommonJS or ES module.
+
+The above code works because `['rawBody']` lets you skip the part about putting your data in a file. [Sound of ice cracking.]
+
+If you choose to write to Storage this way, don't tell anyone who told you how to do it.
+
+### Write to Storage from your app or front end
+
+AngularFire Storage has lots of methods.
+
+```js
+import { connectStorageEmulator, deleteObject, fromTask, getBlob, getBytes, getDownloadURL, getMetadata, getStorage, getStream, list, listAll, percentage, provideStorage, ref, storageInstance$, updateMetadata, uploadBytes, uploadBytesResumable, uploadString } from '@angular/fire/storage';
+```
+
+
+
+
 
 
 
