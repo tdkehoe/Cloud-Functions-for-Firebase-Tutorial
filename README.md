@@ -519,6 +519,38 @@ admin.initializeApp(environment.firebase);
 
 This enables you to use syntax starting with `admin`.
 
+## Async database calls
+
+Database operations so you should structure your database calls with either `async await`:
+
+```js
+async function myFunction() {
+  try {
+    await admin.firestore().collection('MyCollection').doc('MyDocument').set( {key: 'value' } )
+  } catch(error) {
+    console.error(error)
+  } finally {
+    console.log("Finally!");
+  }
+}
+```
+
+or with promises:
+
+*index.ts`
+```
+admin.firestore().collection('MyCollection').doc('MyDocument').get()
+  .then(function(doc) {
+        if (doc.exists) {
+          console.log("Document found.");
+        } else {
+          console.log("No such document.");
+        }
+   .catch (error) {
+        console.error(error);
+   }       
+```
+  
 ## Firestore get, set, add, update, delete, listDocuments
 
 *Do not* use the Firebase Web version 9 keywords `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These keywords will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
@@ -533,6 +565,61 @@ Instead, you can use these keywords to write Cloud Functions with the Firestore 
 * listDocuments
 
 I can't find official documentation for these Cloud Functions REST keywords. There may be more.
+
+### CREATE: `set`
+
+Mostly I use Cloud Functions to get data from APIs then write the data to Firestore or Storage. 90% of my Cloud Functions use `set` to write data to these databases. This code writes an object to a document. 
+
+*index.ts*
+```js
+admin.firestore().collection('Users').doc(context.params.userID).collection(longLanguage).doc('Word_Response_Forvo').set({
+        'word': wordObject})
+        .then() // do nothing
+        .catch(error => console.error(error));
+})
+```
+
+Here's a similar operation.
+
+*index.ts*
+```js
+async function buildWordObject() {
+    try {
+        const wordObject = {
+            addedByName: 'DictionaryBuilder',
+            dateAdded: yearMonthDay,
+            frequency: wordFrequency,
+            longLanguage: longLanguage,
+            requestOrigin: requestOrigin,
+            shortLanguage: shortLanguage,
+            timeAdded: Date.now(),
+            word: word,
+          };
+          await admin.firestore().collection('Dictionaries').doc(longLanguage).collection('Words').doc(word).set(wordObject);
+    } catch (error) {
+          console.error(error);
+    }
+}
+buildWordObject();
+```
+
+Here's a `set` operation that uses `{ merge: true }` to create a new document if none exists or update an existing document.
+
+*index.ts*
+```js
+admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').doc(change.after.data().word).collection('Translations').doc('English').set({
+        translationsArray: translationsArray,
+        shortlanguage: 'en',
+        longLanguage: 'English',
+        source: source,
+        timeAdded: Date.now(),
+        dateAdded: yearMonthDay
+}, { merge: true });
+```
+      
+      
+      
+### CREATE: `add`
 
 ### READ: `get`
 
@@ -567,6 +654,11 @@ admin.firestore().collection('Trusted_Users').where('UID', '==', userID).get()
   });
 ```
 
+### UPDATE: `update`
+
+### DELETE: `delete`
+
+### Other keywords
 
 
 
