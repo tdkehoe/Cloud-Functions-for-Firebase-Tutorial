@@ -21,7 +21,7 @@ Both of these problems are solved with the Firebase Local Emulator Suite. I can 
 
 # Getting Started
 
-The official documentation [Get started](https://firebase.google.com/docs/functions/get-started) is good, except for if you want to use TypeScript. I'll assume that you're reading the official documentation and I won't go into depth repeating the information. I'll provide all the details in the section on setting up TypeScript.
+The official documentation [Get started](https://firebase.google.com/docs/functions/get-started) is good, except for if you want to use TypeScript. I'll assume that you're reading the official documentation and I won't go into depth repeating the information. I'll provide more detail in the section on setting up TypeScript.
 
 Create a Firebase project from your [Firebase console](https://console.firebase.google.com/u/0/).
 
