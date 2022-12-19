@@ -1,6 +1,8 @@
 # Cloud Functions for Firebase Tutorial
 
-My preferred tech stack is Angular (front end), Material (design and UI library), Firebase databases, and [Cloud Functions for Firebase](https://firebase.google.com/docs/functions). I use Cloud Functions to call APIs such as Google Cloud Translation and IBM Watson Speech-to-Text. You don't want to call APIs from your front end because this exposes your API keys or other credentials. You can safely call APIs from your back end, get the data, process the data, and write the data to your databases or send the data to your front end. 
+This tutorial teaches how to use [Cloud Functions for Firebase](https://firebase.google.com/docs/functions) with Firebase database, Angular, and AngularFire. You should be able to adapt this tutorial for other apps or frameworks such as React.
+
+I use Cloud Functions to call APIs such as Google Cloud Translation and IBM Watson Speech-to-Text. You don't want to call APIs from your front end because this exposes your API keys or other credentials. You can safely call APIs from your back end, get the data, process the data, and write the data to your databases or send the data to your front end. 
 
 The official documentation [Explore use cases](https://firebase.google.com/docs/functions/use-cases) goes into depth on other use cases for Cloud Functions. You can trigger a function when data is written to your database. You can perform intensive data processing operations or database sanitization and maintenance.
 
@@ -31,11 +33,23 @@ Install the Firebase CLI globally.
 npm install -g firebase-tools
 ```
 
-Make a directory for your project and spin up a new app or front-end framework.
+## Install your app or front-end framework
+
+Set up your project directory before you install Cloud Functions. For Angular:
 
 ```
 ng new MyProject
 ```
+
+If you don't want to install a framework you might want to initialize a Github repository.
+
+Install AngularFire, if you're using Angular. Select `Firestore`, `Cloud Functions (callable)`, and `Cloud Storage`.
+
+```
+ng add @angular/fire
+```
+
+## Install Firebase node modules
 
 In the project directory, install the Firebase Functions and Firebase Admin packages locally.
 
@@ -158,7 +172,12 @@ If you don't transpile your TypeScript into JavaScript you'll get this error mes
  SyntaxError: Cannot use import statement outside a module
 ```
 
-Now you've completed Firebase initialization!
+Now you've completed Firebase initialization! Now install your app or front-end framework.
+
+
+
+
+
 
 # Call and trigger Cloud Functions
 
