@@ -230,8 +230,8 @@ Copy and paste this Cloud Function in `index.ts`:
 *index.js*
 ```js
 export const upperCaseMe = functions.https.onCall((data, context) => {
-    const original = data.text;
-    const uppercase = original.toUpperCase();
+    const original: string = data.text;
+    const uppercase: string = original.toUpperCase();
     functions.logger.log('upperCaseMe', original, uppercase);
     return uppercase;
 });
@@ -452,6 +452,42 @@ This URL is available in your Firebase Console in your list of Functions. It sho
 ```js
 httpsCallableFromURL(this.functions, 'https://us-central1-myprojectId.cloudfunctions.net/upperCaseMe');
 ```
+
+# Trigger your Cloud Function
+
+The third way to execute a Cloud Function is to write to Firestore or another Firebase database.
+
+Copy and paste this Cloud Function into your `index.ts`:
+
+*index.ts*
+```js
+export const triggerMe = functions.firestore.document('Messages/{docId}').onCreate((snap, context) => {
+    const original: string = snap.data().original;
+    const uppercase: string = original.toUpperCase();
+    functions.logger.log('Uppercasing', original, uppercase);
+    return snap.ref.set({ uppercase }, { merge: true });
+});
+```
+
+Go to your emulator [http://127.0.0.1:4000/functions](http://127.0.0.1:4000/functions) and click on the Firestore tab and `+ Start collection`. Call the collection `Messages`. A document ID is automatically generated. In the document field enter `original` as the key and a `uppercase` as the value. Wait a moment and you should see a new field appear: `uppercase: UPPERCASE`.
+
+Let's look at the difference between the callable function and the triggerable function. With the triggerable function you must specify a document location in Firestore. Here we're specifying the collection `Messages` and then using a wildcard for the documentId. 
+
+Next, we use `onCreate`, which is for new documents. There are four  keywords we could use: 
+
+* `onCreate`	Triggered when a document is written to for the first time.
+* `onUpdate`	Triggered when a document already exists and has any value changed.
+* `onDelete`	Triggered when a document with data is deleted.
+* `onWrite` Triggered when `onCreate`, `onUpdate` or `onDelete` is triggered.
+
+Next, the parameters are `snap` and `context`, not `data` and `context`. In the body of the Cloud Function we change `data.text` to `snap.data().original`.
+
+The last difference is the `return`. Instead of returning the UPPERCASE message to the sender, the UPPERCASE message is written to Firestore. In this case the data is written to the document that triggered the function.
+
+
+
+
+
 
 ## Deploy your Cloud Function to Firebase
 
