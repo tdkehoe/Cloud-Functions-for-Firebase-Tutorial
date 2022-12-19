@@ -337,11 +337,13 @@ This URL also works:
 httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/languagetwo-cd94d/us-central1/upperCaseMe');
 ```
 
+* The `projectId`. This is in `environments/environment.ts` or in Project Settings in your Firebase console. You can also get it from the CLI with `firebase use`.
+* The server's `locationId` plus `1`. This is also in `environments/environment.ts`.
+* The name of the Cloud Function.
 
+The full URL should be available in the emulator but I can't find it.
 
-
-
-
+#### Deploy to the Firebase Cloud
 
 To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Function from your `functions` folder:
 
@@ -351,9 +353,12 @@ firebase deploy --only functions:upperCaseMe
 
 Then change the URL to
 
+```js
 httpsCallableFromURL(this.functions, 'https://us-central1-myprojectId.cloudfunctions.net/upperCaseMe');
+```
 
-Here
+This URL is available in your Firebase Console in your list of Functions.
+
 
 
 
