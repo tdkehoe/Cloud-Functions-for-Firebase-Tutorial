@@ -488,7 +488,7 @@ There's lots more about triggerable Cloud Functions in the [official documentati
 
 # Writing Cloud Functions
 
-Now you nknow how to setup Cloud Functions and then call or trigger a Cloud Function. It's time to write some Cloud Functions.
+Now you know how to setup Cloud Functions and then call or trigger a Cloud Function. It's time to write some Cloud Functions.
 
 ## Node.js
 
@@ -505,11 +505,25 @@ Cloud Functions currently use Node 16. This will change at some point to Node 18
 
 Node is a version of JavaScript (or transpiled TypeScript). Node does some things differently from standard JavaScript, in particular, file handling. We touch on this later.
 
-## get, set, add, update, delete, listDocuments
+## Initialize `admin`
+
+The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. If you're writing in JavaScript, just use the CommonJS module syntax (`require`)
+
+*index.ts`
+```
+const admin = require('firebase-admin');
+import * as functions from "firebase-functions";
+import { environment } from '../../environments/environment';
+admin.initializeApp(environment.firebase);
+```
+
+This enables you to use syntax starting with `admin`.
+
+## Firestore get, set, add, update, delete, listDocuments
 
 *Do not* use the Firebase Web version 9 keywords `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These keywords will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
 
-Instead, you can use these keywords to write Cloud Functions:
+Instead, you can use these keywords to write Cloud Functions with the Firestore database:
 
 * get
 * set
@@ -520,7 +534,44 @@ Instead, you can use these keywords to write Cloud Functions:
 
 I can't find official documentation for these Cloud Functions REST keywords. There may be more.
 
+### READ: `get`
 
+To read data from Firestore use `get`. This code gets a document from Firestore.
+
+*index.ts`
+```
+admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').doc(word).collection('Pronunciations').doc(pronunciation).get()
+  .then(function(doc) {
+            if (doc.exists) {
+              console.log("Document found.");
+            } else {
+              console.log("No such document.");
+            }
+   .catch (error) {
+        console.error(error);
+   }       
+```
+
+This code uses a filter to check if the current user is listed in the collection `Trusted_Users`.
+
+*index.ts`
+```
+admin.firestore().collection('Trusted_Users').where('UID', '==', userID).get()
+  .then(function(querySnapshot) {
+    querySnapshot.forEach(function(doc) {
+      console.log("Trusted user: ", doc.id, " => ", doc.data());
+    });
+     })
+  .catch(function(error) {
+    console.log("Error getting documents: ", error);
+  });
+```
+
+
+
+
+
+## Storage
 
 
 
