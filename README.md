@@ -557,14 +557,12 @@ admin.firestore().collection('MyCollection').doc('MyDocument').get()
 
 Instead, you can use these keywords to write Cloud Functions with the Firestore database:
 
-* get
 * set
-* add
 * update
+* get
 * delete
-* listDocuments
 
-I can't find official documentation for these Cloud Functions REST keywords. There may be more.
+I can't find documentation for Cloud Functions keywords. The closest I can find is for the [Cloud Firestore: Node.js Client](https://cloud.google.com/nodejs/docs/reference/firestore/latest). 
 
 ### CREATE: `set`
 
@@ -616,10 +614,20 @@ admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').
         dateAdded: yearMonthDay
 }, { merge: true });
 ```
-      
-      
-      
-### CREATE: `add`
+
+### UPDATE: `update`
+
+`update` will update an existing document. If the document doesn't exist it won't do anything.
+
+```js
+admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').doc(word).collection('Pronunciations').doc(pronunciation).update( {audioFile: url} )
+    .then(function() {
+        console.log("Download URL updated to database.");
+    })
+    .catch(function(error) {
+        console.error(error);
+    });
+```
 
 ### READ: `get`
 
@@ -654,13 +662,33 @@ admin.firestore().collection('Trusted_Users').where('UID', '==', userID).get()
   });
 ```
 
-### UPDATE: `update`
-
 ### DELETE: `delete`
+
+This will delete a document.
+
+```js
+admin.firestore().collection('MyCollection').doc('MyDocument').delete()
+```
 
 ### Other keywords
 
+There may be other keywords, such as `add`. The difference between `add` and `set` is that `add` makes a new document when `set` writes data to an existing document that you've identified by its `documentID`.
 
+Another method I've used is `listDocuments()`. This code lists the documents in a collection.
+
+```js
+admin.firestore().collection('Videos').doc(longLanguage).collection('Translations').listDocuments()
+        .then(function(value) {
+          value.map((value) => {
+            value.delete();
+            resolve('Deleted.');
+          });
+        })
+        .catch(function(error) {
+          console.error(error);
+          reject(error);
+        });
+```
 
 
 ## Storage
