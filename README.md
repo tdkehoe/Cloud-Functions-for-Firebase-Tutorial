@@ -248,7 +248,7 @@ Make a button in your app or front-end framework. The following code is for Angu
 *app.component.html*
 ```html
 <h3>Call cloud function</h3>
-<form (ngSubmit)="callMe(messageText)">
+<form (ngSubmit)="callMe()">
     <input type="text" [(ngModel)]="messageText" name="message" placeholder="message" required>
     <button type="submit" value="Submit">Submit</button>
 </form>
@@ -262,7 +262,14 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
+// Angular
+import { environment } from '../environments/environment';
 import { FormsModule } from '@angular/forms';
+
+// AngularFire
+import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideFirestore, getFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
+import { provideFunctions,getFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
 
 @NgModule({
   declarations: [
@@ -270,7 +277,22 @@ import { FormsModule } from '@angular/forms';
   ],
   imports: [
     BrowserModule,
-    FormsModule
+    FormsModule,
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideFirestore(() => {
+      const firestore = getFirestore();
+      if (!environment.production) {
+        connectFirestoreEmulator(firestore, 'localhost', 8080);
+      }
+      return firestore;
+    }),
+    provideFunctions(() => {
+      const functions = getFunctions();
+      if (!environment.production) {
+        connectFunctionsEmulator(functions, 'localhost', 5001);
+      }
+      return functions;
+    }),
   ],
   providers: [],
   bootstrap: [AppComponent]
@@ -280,28 +302,27 @@ export class AppModule { }
 
 *app.component.ts*
 ```js
-import { Component } from '@angular/core';
-import { getFunctions, httpsCallable, httpsCallableFromURL } from "firebase/functions";
-import { initializeApp } from 'firebase/app';
-import { environment } from '../environments/environment';
+import { Component, Inject } from '@angular/core';
+import { Functions, httpsCallable, httpsCallableFromURL } from '@angular/fire/functions';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
+
 export class AppComponent {
-  firebaseConfig = environment.firebaseConfig;
-  firebaseApp = initializeApp(this.firebaseConfig);
+  constructor(
+    @Inject(Functions) private readonly functions: Functions,
+  ) {}
 
-  messageText: string | null = null;
-  functions = getFunctions(this.firebaseApp);
+  messageText: string = '';
 
-  callMe(messageText: string | null) {
-    console.log("Calling Cloud Function: " + messageText);
-    // const upperCaseMe = httpsCallable(this.functions, 'upperCaseMe');
-    const upperCaseMe = httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/upperCaseMe');
-    upperCaseMe({ text: messageText })
+  callMe() {
+    console.log("Calling Cloud Function: " + this.messageText);
+    const upperCaseMe = httpsCallable(this.functions, 'upperCaseMe');
+    // const upperCaseMe = httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/my-projectId/us-central1/upperCaseMe');
+    upperCaseMe({ text: this.messageText })
       .then((result) => {
         console.log(result.data)
       })
@@ -312,57 +333,7 @@ export class AppComponent {
 }
 ```
 
-### The Cloud Function's URL
-
-We call the Cloud Function with this line:
-
-```js
-httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/upperCaseMe');
-```
-
-The URL is crucial. It has four parts:
-
-* The URL of the server. The port (`5001`) was provided when you started the emulator:
-
-```
-┌───────────┬────────────────┬─────────────────────────────────┐
-│ Emulator  │ Host:Port      │ View in Emulator UI             │
-├───────────┼────────────────┼─────────────────────────────────┤
-│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
-```
-
-This URL also works:
-
-```
-httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/languagetwo-cd94d/us-central1/upperCaseMe');
-```
-
-* The `projectId`. This is in `environments/environment.ts` or in Project Settings in your Firebase console. You can also get it from the CLI with `firebase use`.
-* The server's `locationId` plus `1`. This is also in `environments/environment.ts`.
-* The name of the Cloud Function.
-
-The full URL should be available in the emulator but I can't find it.
-
-#### Deploy to the Firebase Cloud
-
-To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Function from your `functions` folder:
-
-```
-firebase deploy --only functions:upperCaseMe
-```
-
-Then change the URL to
-
-```js
-httpsCallableFromURL(this.functions, 'https://us-central1-myprojectId.cloudfunctions.net/upperCaseMe');
-```
-
-This URL is available in your Firebase Console in your list of Functions.
-
-
-
-
-### Call your Cloud Function
+## Call your Cloud Function
 
 Open your browser and your browser console. Enter something in the form field and click `Submit`. In your console you should see:
 
@@ -422,20 +393,80 @@ You can see the log from the line `functions.logger.log('upperCaseMe', original,
 
 Finally the emulator throws an error: `Your function timed out after ~60s.` This seems to be a bug in the emulator. I ignore it.
 
-## Call your Cloud Function without the URL
-
-In `app.component.ts`, remove the comments from the line with `httpsCallable` and comment out the line with `httpsCallableFromURL`.
-
-When I call the function now the emulator logs show that it executes correctly but my browser log shows that it returns `null`. I don't know what the problem is.
-
 ### Data and context
 
-You may have noticed the parameters for `onCall`:
+`onCall` takes two parameters
 
 *index.ts*
 ```js
 functions.https.onCall((data, context)
 ```
+
+`data` is the request we sent to the Cloud Function. `data.text` is our message.
+
+`context` is information such as the user's userID, etc. More on this in the official documentation.
+
+### `httpsCallable` vs. `httpsCallableFromURL`
+
+Comment out the line with `httpsCallable` and comment in the line with `httpsCallableFromURL`. Change `my-projectId` in the URL to your `projectId` in `environment.ts`.
+
+Run your code again. A Firebase team member told me, "`httpsCallableFromURL` is for cases when you cannot use the normal way that the SDK locates the backend, for example, if you are hosting the callable function on some service that is not a normal Cloud Functions backend, or you are trying to invoke a function in a project that's not part of your app."
+
+In other words, you shouldn't need to use `httpsCallableFromURL`. However, I've twice had `httpsCallable` fail and `httpsCallableFromURL` work. In the first case, `httpsCallable` repeatedly threw a CORS error but `httpsCallableFromURL` executed without error. Then when I tried `httpsCallable` again it executed without the CORS error. 
+
+In the second case, I'd initialized Firebase incorrectly (initialize Firebase in `app.module.ts`, not in `app.component.ts`!). `httpsCallableFromURL` executed correctly. The emulator logs showed that `httpsCallable` executed correctly but in the browser console the Cloud Function returned `null`.
+
+I also like that `httpsCallableFromURL` allows switching between the emulator and the cloud by changing the URL. But again, there's a better way to do this (in `environment.ts` change `production` between `true` and `false`).
+
+My conclusion is that if your callable function isn't working, try `httpsCallableFromURL` and your function might work. But don't stop there. Figure out what the problem was with `httpsCallable` and fix it.
+
+#### The emulator URL
+
+With `httpsCallableFromURL` the URL is crucial. With the emulator, the URL has four parts:
+
+* The URL of the server. The port (`5001`) was provided when you started the emulator:
+
+```
+┌───────────┬────────────────┬─────────────────────────────────┐
+│ Emulator  │ Host:Port      │ View in Emulator UI             │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
+```
+
+This URL also works:
+
+```
+httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/languagetwo-cd94d/us-central1/upperCaseMe');
+```
+
+* The `projectId`. This is in `environments/environment.ts` or in Project Settings in your Firebase console. You can also get it from the CLI with `firebase use`.
+* The server's `locationId` plus `1`. This is also in `environments/environment.ts`.
+* The name of the Cloud Function.
+
+The emulator doesn't provide the URL. (It should, IMHO.)
+
+#### The Firebase Cloud URL
+
+This URL is available in your Firebase Console in your list of Functions. It should look similar to:
+
+```js
+httpsCallableFromURL(this.functions, 'https://us-central1-myprojectId.cloudfunctions.net/upperCaseMe');
+```
+
+## Deploy your Cloud Function to Firebase
+
+To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Function from your `functions` folder:
+
+```
+firebase deploy --only functions:upperCaseMe
+```
+
+
+
+
+
+
+
 
 
 
