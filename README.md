@@ -484,6 +484,44 @@ Next, the parameters are `snap` and `context`, not `data` and `context`. In the 
 
 The last difference is the `return`. Instead of returning the UPPERCASE message to the sender, the UPPERCASE message is written to Firestore. In this case the data is written to the document that triggered the function.
 
+There's lots more about triggerable Cloud Functions in the [official documentation](https://firebase.google.com/docs/functions/firestore-events), plus triggers from Auth, Cloud Storage, and other Firebase databases.
+
+# Writing Cloud Functions
+
+Now you nknow how to setup Cloud Functions and then call or trigger a Cloud Function. It's time to write some Cloud Functions.
+
+## Node.js
+
+Cloud Functions are written in Node.js. Open `functions/package.json` and check the engine:
+
+*functions/package.json*
+```js
+  "engines": {
+    "node": "16"
+  },
+```
+
+Cloud Functions currently use Node 16. This will change at some point to Node 18.
+
+Node is a version of JavaScript (or transpiled TypeScript). Node does some things differently from standard JavaScript, in particular, file handling. We touch on this later.
+
+## get, set, add, update, delete, listDocuments
+
+*Do not* use the Firebase Web version 9 keywords `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These keywords will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
+
+Instead, you can use these keywords to write Cloud Functions:
+
+* get
+* set
+* add
+* update
+* delete
+* listDocuments
+
+I can't find official documentation for these Cloud Functions REST keywords. There may be more.
+
+
+
 
 
 
