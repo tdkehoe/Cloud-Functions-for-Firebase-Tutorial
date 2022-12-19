@@ -428,7 +428,14 @@ In `app.component.ts`, remove the comments from the line with `httpsCallable` an
 
 When I call the function now the emulator logs show that it executes correctly but my browser log shows that it returns `null`. I don't know what the problem is.
 
+### Data and context
 
+You may have noticed the parameters for `onCall`:
+
+*index.ts*
+```js
+functions.https.onCall((data, context)
+```
 
 
 
