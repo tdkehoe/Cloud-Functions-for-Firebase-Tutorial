@@ -426,7 +426,7 @@ Finally the emulator throws an error: `Your function timed out after ~60s.` This
 
 In `app.component.ts`, remove the comments from the line with `httpsCallable` and comment out the line with `httpsCallableFromURL`.
 
-When I call the function now the emulator logs show that it executes correctly but my browser log shows that it returns `null`. I don't know what the problme is.
+When I call the function now the emulator logs show that it executes correctly but my browser log shows that it returns `null`. I don't know what the problem is.
 
 
 
