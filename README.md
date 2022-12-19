@@ -753,12 +753,9 @@ AngularFire Storage has lots of methods.
 import { connectStorageEmulator, deleteObject, fromTask, getBlob, getBytes, getDownloadURL, getMetadata, getStorage, getStream, list, listAll, percentage, provideStorage, ref, storageInstance$, updateMetadata, uploadBytes, uploadBytesResumable, uploadString } from '@angular/fire/storage';
 ```
 
+These methods, which are in AngularFire 7.5, aren't in the [AngularFire Storage documention](https://github.com/angular/angularfire/blob/master/docs/storage/storage.md), which appears to be written for AngularFire 6.
 
-
-
-
-
-
+Perhaps I can call an API from a Cloud Function and, instead of getting data, I could get a download URL, then pass the download URL to the front end and use `uploadBytes` to write the file to Storage?
 
 ## Deploy your Cloud Function to Firebase
 
