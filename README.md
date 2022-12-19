@@ -172,12 +172,36 @@ If you don't transpile your TypeScript into JavaScript you'll get this error mes
  SyntaxError: Cannot use import statement outside a module
 ```
 
-Now you've completed Firebase initialization! Now install your app or front-end framework.
+### Start emulators
 
+Gentleman, start your emulators!
 
+In your project directory, 
 
+```
+firebase emulators:start
+```
 
+You should see
 
+```
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌───────────┬────────────────┬─────────────────────────────────┐
+│ Emulator  │ Host:Port      │ View in Emulator UI             │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Firestore │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Storage   │ 127.0.0.1:9199 │ http://127.0.0.1:4000/storage   │
+└───────────┴────────────────┴─────────────────────────────────┘
+```
+
+Now you've completed Firebase initialization! 
 
 # Call and trigger Cloud Functions
 
@@ -211,6 +235,12 @@ export const upperCaseMe = functions.https.onCall((data, context) => {
     functions.logger.log('upperCaseMe', original, uppercase);
     return uppercase;
 });
+```
+
+From your `functions` directory transpile your TypeScript:
+
+```
+npm run build
 ```
 
 Make a button in your app or front-end framework. The following code is for Angular.
@@ -264,15 +294,14 @@ export class AppComponent {
   firebaseConfig = environment.firebaseConfig;
   firebaseApp = initializeApp(this.firebaseConfig);
 
-
   messageText: string | null = null;
   functions = getFunctions(this.firebaseApp);
 
   callMe(messageText: string | null) {
     console.log("Calling Cloud Function: " + messageText);
-    // const addMessage = httpsCallable(this.functions, 'callMe'); // throws CORS error
-    const callMe = httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/callMe');
-    callMe({ text: messageText })
+    // const addMessage = httpsCallable(this.functions, 'upperCaseMe'); // throws CORS error
+    const upperCaseMe = httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/upperCaseMe');
+    upperCaseMe({ text: messageText })
       .then((result) => {
         console.log(result.data)
       })
@@ -281,9 +310,114 @@ export class AppComponent {
       });;
   };
 }
-
 ```
 
+### The Cloud Function's URL
+
+We call the Cloud Function with this line:
+
+```js
+httpsCallableFromURL(this.functions, 'http://localhost:5001/MyProject/us-central1/upperCaseMe');
+```
+
+The URL is crucial. It has four parts:
+
+* The URL of the server. The port (`5001`) was provided when you started the emulator:
+
+```
+┌───────────┬────────────────┬─────────────────────────────────┐
+│ Emulator  │ Host:Port      │ View in Emulator UI             │
+├───────────┼────────────────┼─────────────────────────────────┤
+│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
+```
+
+This URL also works:
+
+```
+httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/languagetwo-cd94d/us-central1/upperCaseMe');
+```
+
+
+
+
+
+
+
+To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Function from your `functions` folder:
+
+```
+firebase deploy --only functions:upperCaseMe
+```
+
+Then change the URL to
+
+httpsCallableFromURL(this.functions, 'https://us-central1-myprojectId.cloudfunctions.net/upperCaseMe');
+
+Here
+
+
+
+### Call your Cloud Function
+
+Open your browser and your browser console. Enter something in the form field and click `Submit`. In your console you should see:
+
+```
+Calling Cloud Function: this is lowercase
+THIS IS LOWERCASE
+```
+
+Open another browser tab for your emulator at `http://127.0.0.1:4000/functions`. Open the `Logs` tab and you should see something like:
+
+```
+18:35:25 I
+function[us-central1-upperCaseMe]
+Beginning execution of "upperCaseMe"
+18:35:25 I
+function[us-central1-upperCaseMe]
+Finished "upperCaseMe" in 1.244812ms
+18:35:25 I
+function[us-central1-upperCaseMe]
+Beginning execution of "upperCaseMe"
+18:35:25 I
+function[us-central1-upperCaseMe]
+{
+  "verifications": {
+    "app": "MISSING",
+    "auth": "MISSING"
+  },
+  "logging.googleapis.com/labels": {
+    "firebase-log-type": "callable-request-verification"
+  },
+  "severity": "INFO",
+  "message": "Callable request verification passed"
+}
+18:35:25 I
+function[us-central1-upperCaseMe]
+{
+  "severity": "INFO",
+  "message": "upperCaseMe this is lowercase THIS IS LOWERCASE"
+}
+18:35:25 I
+function[us-central1-upperCaseMe]
+Finished "upperCaseMe" in 3.944818ms
+18:35:30 W
+function[us-central1-upperCaseMe]
+Your function timed out after ~60s. To configure this timeout, see
+      https://firebase.google.com/docs/functions/manage-functions#set_timeout_and_memory_allocation.
+18:35:30 W
+function[us-central1-upperCaseMe]
+Your function was killed because it raised an unhandled error.
+```
+
+`I` is "information, `W` means "warning".
+
+For reasons I don't understand, a callable function executes twice.
+
+You can see the log from the line `functions.logger.log('upperCaseMe', original, uppercase);`. You could use `console.log` instead. 
+
+Finally the emulator throws an error: `Your function timed out after ~60s.` This seems to be a bug in the emulator. I ignore it.
+
+## Call your Cloud Function
 
 
 
