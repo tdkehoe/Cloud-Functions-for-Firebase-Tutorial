@@ -566,17 +566,20 @@ Node is a version of JavaScript (or transpiled TypeScript). Node does some thing
 
 ## Initialize `admin`
 
-The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. If you're writing in JavaScript, just use the CommonJS module syntax (`require`).
-
-*index.ts`
+*index.ts*
 ```
+const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-import * as functions from "firebase-functions";
-import { environment } from '../../environments/environment';
-admin.initializeApp(environment.firebase);
+admin.initializeApp();
 ```
 
 This enables you to use syntax starting with `admin`. 
+
+### `require` vs. `import
+
+The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. 
+
+If you're writing in JavaScript, just use the CommonJS module syntax (`require`).
 
 ## Terminate Cloud Functions with `return` or promises
 
