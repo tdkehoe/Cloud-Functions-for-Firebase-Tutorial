@@ -448,6 +448,11 @@ functions.https.onCall((data, context)
 
 `context` is information such as the user's userID, etc. More on this in the official documentation.
 
+### Async call
+
+Let's write the results to a different location in Firestore. This will require an async call to Firestore.
+
+
 ### `httpsCallable` vs. `httpsCallableFromURL`
 
 Comment out the line with `httpsCallable` and comment in the line with `httpsCallableFromURL`. Change `my-projectId` in the URL to your `projectId` in `environment.ts`.
