@@ -786,10 +786,13 @@ firebase deploy
 
 Wait a few minutes and you should see your Cloud Function listed in your Firebase Console. If you run it you'll see the logs in your Firebase Console.
 
-## Manage your credentials with an IAM service account
+## Manage your credentials
 
 Putting API keys and other credentials in your `index.ts` may not be a good idea. You might push your code to public repository on GitHub, exposing your credentials. It's better to put your credentials into `environment.ts`.
 
+Cloud Functions have a way to manage credentials with [parameterized configuration](https://firebase.google.com/docs/functions/config-env#params). I haven't tried this, I will work on this.
+
+### Use an IAM service account
 Even better is to use an IAM service account. This was baffling to me at first, and then it seemed like magic. I set up an IAM service account, for example for Google Cloud Translate, then I can deploy my Cloud Function with the IAM service account, and then no credentials are needed anywhere in my code!
 
 Except that `firebase deploy` doesn't handle IAM service accounts. Instead, use `gcloud functions deploy`:
