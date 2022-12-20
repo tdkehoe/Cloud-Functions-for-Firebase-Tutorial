@@ -389,7 +389,7 @@ Your function was killed because it raised an unhandled error.
 
 For reasons I don't understand, a callable function executes twice.
 
-You can see the log from the line `functions.logger.log('upperCaseMe', original, uppercase);`. You could use `console.log` instead. 
+You can see the log from the line `functions.logger.log('upperCaseMe', original, uppercase);`. You could use `console.log` instead. The [Cloud Functions logger SDK](https://firebase.google.com/docs/functions/writing-and-viewing-logs) has many features specific to Firebase. 
 
 Finally the emulator throws an error: `Your function timed out after ~60s.` This seems to be a bug in the emulator. I ignore it.
 
@@ -804,6 +804,10 @@ gcloud functions deploy EStranslateEN --service-account google-cloud-translate@m
 # Use Functions in your Firebase Console
 
 You can view you functions, read the logs, get each function's URL, and delete functions from your Firebase Console.
+
+# Testing Cloud Functions
+
+I need to learn this.
 
 
 
