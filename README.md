@@ -1,5 +1,6 @@
 # Cloud Functions for Firebase Tutorial
 
+
 - [Cloud Functions for Firebase Tutorial](#cloud-functions-for-firebase-tutorial)
   - [Servers are obsolete](#servers-are-obsolete)
   - [Firebase Local Emulator Suite](#firebase-local-emulator-suite)
@@ -15,15 +16,16 @@
 - [Call and trigger Cloud Functions](#call-and-trigger-cloud-functions)
   - [Callable vs. triggerable functions](#callable-vs-triggerable-functions)
   - [HTTPS callable functions](#https-callable-functions)
-  - [Call your Cloud Function](#call-your-cloud-function)
+    - [Call your Cloud Function](#call-your-cloud-function)
     - [Data and context](#data-and-context)
     - [`httpsCallable` vs. `httpsCallableFromURL`](#httpscallable-vs-httpscallablefromurl)
       - [The emulator URL](#the-emulator-url)
       - [The Firebase Cloud URL](#the-firebase-cloud-url)
-- [Trigger your Cloud Function](#trigger-your-cloud-function)
+  - [Trigger your Cloud Function](#trigger-your-cloud-function)
 - [Writing Cloud Functions](#writing-cloud-functions)
   - [Node.js](#nodejs)
   - [Initialize `admin`](#initialize-admin)
+    - [`require` vs. \`import](#require-vs-import)
   - [Terminate Cloud Functions with `return` or promises](#terminate-cloud-functions-with-return-or-promises)
     - [`return`](#return)
   - [Firestore get, set, add, update, delete, listDocuments](#firestore-get-set-add-update-delete-listdocuments)
@@ -32,6 +34,7 @@
     - [READ: `get`](#read-get)
     - [DELETE: `delete`](#delete-delete)
     - [Other methods](#other-methods)
+    - [Async call](#async-call)
   - [Storage](#storage)
     - [`uploadBytes` with `['rawBody']`](#uploadbytes-with-rawbody)
     - [Write to Storage from your app or front end](#write-to-storage-from-your-app-or-front-end)
