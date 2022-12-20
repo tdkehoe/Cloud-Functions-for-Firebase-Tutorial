@@ -757,13 +757,32 @@ These methods, which are in AngularFire 7.5, aren't in the [AngularFire Storage 
 
 Perhaps I can call an API from a Cloud Function and, instead of getting data, I could get a download URL, then pass the download URL to the front end and use `uploadBytes` to write the file to Storage?
 
-## Deploy your Cloud Function to Firebase
+# Deploy your Cloud Function to Firebase
 
 To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Function from your `functions` folder:
 
 ```
 firebase deploy --only functions:upperCaseMe
 ```
+
+Wait a few minutes and you should see your Cloud Function listed in your Firebase Console. If you run it you'll see the logs in your Firebase Console.
+
+## Manage your credentials with an IAM service account
+
+Putting API keys and other credentials in your `index.ts` may not be a good idea. You might push your code to public repository on GitHub, exposing your credentials. It's better to put your credentials into `environment.ts`.
+
+Even better is to use an IAM service account. This was baffling to me at first, and then it seemed like magic. I set up an IAM service account, for example for Google Cloud Translate, then I can deploy my Cloud Function with the IAM service account, and then no credentials are needed anywhere in my code!
+
+Except that `firebase deploy` doesn't handle IAM service accounts. Instead, use `gcloud functions deploy`:
+
+```
+gcloud functions deploy EStranslateEN --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
+```
+
+
+
+
+
 
 
 
