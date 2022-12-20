@@ -554,7 +554,35 @@ Now you know how to setup Cloud Functions and then call or trigger a Cloud Funct
 
 ## Node.js
 
-Cloud Functions are written in Node.js. Open `functions/package.json` and check the engine:
+Cloud Functions for Firebase is a [Node.js](https://nodejs.org/en/) runtime. You can run any library on it and write your code any way you want. Typically we use the Firebase Admin SDK or the Google Cloud SDK. To rephrase that, there isn't a set of "Cloud Functions syntax" that you have to use.
+
+### Firebase Admin SDK v10 modular syntax
+On October 14, 2021, the Firebase team released [Firebase Admin Node.js SDK v10](https://firebase.google.com/docs/admin/migrate-node-v10). Prior to v10 Cloud Functions were written with a nested namespace hierarchy with the global `admin()` at the top of the hierarchy. For example, to add a new document to Firestore, 
+
+```js
+admin.firestore().collection('Messages').add({ original, uppercase });
+```
+
+You can still choose to use the old `admin()` syntax but the Firebase team recommends using the new, modular syntax. Here's how to initialize your Cloud Functions.
+
+*index.js*
+```js
+import { initializeApp, App } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore'
+import { getFunctions, Functions } from 'firebase-admin/functions';
+const app: App = initializeApp();
+const firestore = getFirestore(app);
+const functions: Functions = getFunctions(app);
+```
+
+### The older, nested namespace hierarchy with the global `admin()`
+
+
+
+
+### Check your Node version
+
+Open `functions/package.json` and check the version of Node:
 
 *functions/package.json*
 ```js
@@ -564,8 +592,6 @@ Cloud Functions are written in Node.js. Open `functions/package.json` and check 
 ```
 
 Cloud Functions currently use Node 16. This will change at some point to Node 18.
-
-Node is a version of JavaScript (or transpiled TypeScript). Node does some things differently from standard JavaScript, in particular, file handling and streaming data.
 
 ## Initialize `admin`
 
