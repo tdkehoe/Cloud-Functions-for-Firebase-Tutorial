@@ -342,6 +342,23 @@ import { provideFunctions,getFunctions, connectFunctionsEmulator } from '@angula
 export class AppModule { }
 ```
 
+*environements/environment.ts
+```js
+export const environment = {
+  firebase: {
+    projectId: 'my-projectId',
+    appId: '...',
+    databaseURL: 'https://my-projectId.firebaseio.com',
+    storageBucket: 'my-projectId.appspot.com',
+    locationId: 'us-central',
+    apiKey: '...',
+    authDomain: 'my-projectId.firebaseapp.com',
+    messagingSenderId: '...',
+  },
+  production: false
+};
+```
+
 *app.component.ts*
 ```js
 import { Component, Inject } from '@angular/core';
@@ -447,11 +464,6 @@ functions.https.onCall((data, context)
 `data` is the request we sent to the Cloud Function. `data.text` is our message.
 
 `context` is information such as the user's userID, etc. More on this in the official documentation.
-
-### Async call
-
-Let's write the results to a different location in Firestore. This will require an async call to Firestore.
-
 
 ### `httpsCallable` vs. `httpsCallableFromURL`
 
@@ -564,7 +576,7 @@ import { environment } from '../../environments/environment';
 admin.initializeApp(environment.firebase);
 ```
 
-This enables you to use syntax starting with `admin`.
+This enables you to use syntax starting with `admin`. 
 
 ## Terminate Cloud Functions with `return` or promises
 
@@ -743,6 +755,14 @@ admin.firestore().collection('Videos').doc(longLanguage).collection('Translation
           reject(error);
         });
 ```
+
+### Async call
+
+Let's write our UPPERCASE results to Firestore.
+
+
+
+
 
 
 ## Storage
