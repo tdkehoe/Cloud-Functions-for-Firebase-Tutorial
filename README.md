@@ -762,14 +762,30 @@ admin.firestore().collection('Videos').doc(longLanguage).collection('Translation
         });
 ```
 
-### Async call
+### Writing an async call to Firestore
 
 Let's write our UPPERCASE results to Firestore.
 
+*index.ts*
+```js
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+admin.initializeApp();
 
+export const upperCaseMe = functions.https.onCall(async (data: any, context: any) => {
+    const original: string = data.text;
+    const uppercase: string = original.toUpperCase();
+    functions.logger.log('upperCaseMe', original, uppercase);
+    await admin.firestore().collection('Messages').add({ original, uppercase });
+    return uppercase;
+});
+```
 
+The first three lines give us access to `admin`.
 
+Note that `async` goes into the parameters of `onCall`.
 
+We added a line that adds a document to Firestore. We used `await` in this line.
 
 ## Storage
 
