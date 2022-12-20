@@ -519,10 +519,11 @@ admin.initializeApp(environment.firebase);
 
 This enables you to use syntax starting with `admin`.
 
-## Async database calls
+## Terminate Cloud Functions with `return` or promises
 
-Database operations so you should structure your database calls with either `async await`:
+Database operations are asynchronous so you should structure your database calls with either `async await`:
 
+*index.ts*
 ```js
 async function myFunction() {
   try {
@@ -537,7 +538,7 @@ async function myFunction() {
 
 or with promises:
 
-*index.ts`
+*index.ts*
 ```
 admin.firestore().collection('MyCollection').doc('MyDocument').get()
   .then(function(doc) {
@@ -550,7 +551,13 @@ admin.firestore().collection('MyCollection').doc('MyDocument').get()
         console.error(error);
    }       
 ```
-  
+
+### `return`
+
+All Cloud Functions must terminate with `return`. Even if you don't need anything returned, terminate with `return 0`. If you don't do this you'll see an error in your logs.
+
+Remember that [`return` is synchronous and promises are asynchronous](https://firebase.google.com/docs/functions/terminate-functions). Your callable function may return `null` rather than the results of an asynchronous call.
+
 ## Firestore get, set, add, update, delete, listDocuments
 
 *Do not* use the Firebase Web version 9 methods `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These methods will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
