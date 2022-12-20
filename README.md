@@ -375,7 +375,7 @@ export class AppComponent {
 }
 ```
 
-## Call your Cloud Function
+### Call your Cloud Function
 
 Open your browser and your browser console. Enter something in the form field and click `Submit`. In your console you should see:
 
