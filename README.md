@@ -765,6 +765,18 @@ To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Functi
 firebase deploy --only functions:upperCaseMe
 ```
 
+That deploys just one function. To deploy all your functions:
+
+```
+firebase deploy --only functions:
+```
+
+To deploy your entire project:
+
+```
+firebase deploy
+```
+
 Wait a few minutes and you should see your Cloud Function listed in your Firebase Console. If you run it you'll see the logs in your Firebase Console.
 
 ## Manage your credentials with an IAM service account
@@ -779,7 +791,9 @@ Except that `firebase deploy` doesn't handle IAM service accounts. Instead, use 
 gcloud functions deploy EStranslateEN --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
 ```
 
+# Use Functions in your Firebase Console
 
+You can view you functions, read the logs, get each function's URL, and delete functions from your Firebase Console.
 
 
 
