@@ -791,25 +791,6 @@ There's no set of commands like `set()`, `get()`, `update()`, `delete()`. Instea
 
 Cloud Storage has [easy to use commands](https://firebase.google.com/docs/storage/web/upload-files):` uploadBytes()` and `uploadString()`. `uploadBytes` is a method for writing a file to Storage. These commands are for your app or front end. Consider structuring your code to handle files from your app or front end. For example, your app calls a Cloud Functions that calls an API to get a file, and then the Cloud Functions writes the file to Cloud Storage. If you can instead get a download URL then pass the download URL from your Cloud Function back to your app or front end, and then use `uploadBytes()` to write the file to Cloud Storage.
 
-### `uploadBytes()` with `['rawBody']`
-
-And you can use `uploadBytes()` in a Cloud Function. [Sounds of thin ice creaking.]
-
-```js
-import { getStorage, ref, uploadBytes, uploadString, connectStorageEmulator } from "firebase/storage";
-
-let file = await got('https://audio.oxforddictionaries.com/en/mp3/winter__us_2.mp3');
-await uploadBytes(storageRef, file['rawBody'], metadata);
-```
-
-Your data must be a file. Data downloaded from an API isn't a file. In JavaScript you can easily make a file with `new File()` but this isn't available in Node.js. I tried to convert a photo on my laptop's drive into a file using WebPack. It was a nightmare.
-
-Then you have to import the file into `index.ts`, which requires converting the file into a CommonJS or ES module.
-
-The above code works because `['rawBody']` lets you skip the part about putting your data in a file. [Sound of ice cracking.]
-
-If you choose to write to Storage this way, don't tell anyone who told you how to do it.
-
 ### AngularFire Storage methods for your app or front end
 
 AngularFire Storage has lots of methods.
