@@ -573,12 +573,7 @@ Cloud Functions currently use Node 16. This will change at some point to Node 18
 
 The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. 
 
-The Firebase team [recommends](https://firebase.google.com/docs/admin/migrate-node-v10#es-modules-support) adding `"type": "module"` to your `package.json`.
-
-*package.json*
-```js
-"type": "module",
-```
+I recommend *not* adding `"type": "module"` to your `package.json`. This will use ES modules in your Node.js runtime, i.e., your `index.js` will be an ES module. If you're using TypeScript you want `index.ts` to be an ES module and your `index.js` to be a CommonJS module.
 
 If you're writing your Cloud Functions in JavaScript use the CommonJS module syntax (`require`).
 
