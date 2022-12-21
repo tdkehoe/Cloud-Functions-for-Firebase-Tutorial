@@ -556,30 +556,6 @@ Now you know how to setup Cloud Functions and then call or trigger a Cloud Funct
 
 Cloud Functions for Firebase is a [Node.js](https://nodejs.org/en/) runtime. You can run any library on it and write your code any way you want. Typically we use the Firebase Admin SDK or the Google Cloud SDK. To rephrase that, there isn't a set of "Cloud Functions syntax" that you have to use.
 
-### Firebase Admin SDK v10 modular syntax
-On October 14, 2021, the Firebase team released [Firebase Admin Node.js SDK v10](https://firebase.google.com/docs/admin/migrate-node-v10). Prior to v10 Cloud Functions were written with a nested namespace hierarchy with the global `admin()` at the top of the hierarchy. For example, to add a new document to Firestore, 
-
-```js
-admin.firestore().collection('Messages').add({ original, uppercase });
-```
-
-You can still choose to use the old `admin()` syntax but the Firebase team recommends using the new, modular syntax. Here's how to initialize your Cloud Functions.
-
-*index.js*
-```js
-import { initializeApp, App } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore'
-import { getFunctions, Functions } from 'firebase-admin/functions';
-const app: App = initializeApp();
-const firestore = getFirestore(app);
-const functions: Functions = getFunctions(app);
-```
-
-### The older, nested namespace hierarchy with the global `admin()`
-
-
-
-
 ### Check your Node version
 
 Open `functions/package.json` and check the version of Node:
@@ -593,7 +569,20 @@ Open `functions/package.json` and check the version of Node:
 
 Cloud Functions currently use Node 16. This will change at some point to Node 18.
 
-## Initialize `admin`
+### `require` vs. `import
+
+The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. 
+
+The Firebase team [recommends](https://firebase.google.com/docs/admin/migrate-node-v10#es-modules-support) adding `"type": "module"` to your `package.json`.
+
+*package.json*
+```js
+"type": "module",
+```
+
+If you're writing your Cloud Functions in JavaScript use the CommonJS module syntax (`require`).
+
+## Initialize `admin` with Firebase Admin SDK v9 nested namespace hierarchy syntax
 
 *index.ts*
 ```
@@ -602,13 +591,24 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 ```
 
-This enables you to use syntax starting with `admin`. 
+This enables you to use syntax starting with `admin`, a.k.a, the nested namespace hierarchy with the global `admin()` at the top of the hierarchy.
 
-### `require` vs. `import
+### Initialize Firebase Admin SDK v10 modular syntax (optional)
+On October 14, 2021, the Firebase team released [Firebase Admin Node.js SDK v10](https://firebase.google.com/docs/admin/migrate-node-v10). The Firebase team recommends using the new, modular syntax. 
 
-The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. 
+Initialize your `index.ts`.
 
-If you're writing in JavaScript, just use the CommonJS module syntax (`require`).
+*index.ts*
+```js
+import { initializeApp, App } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore'
+import { getFunctions, Functions } from 'firebase-admin/functions';
+const app: App = initializeApp();
+const firestore = getFirestore(app);
+const functions: Functions = getFunctions(app);
+```
+
+As far as I can tell that's as far as you can get in Cloud Functions with Firebase Admin SDK v10. You can't call a Cloud Function with `onCall` or trigger a Cloud Function with `onCreate` using Firebase Admin SDK v10 modular syntax.
 
 ## Terminate Cloud Functions with `return` or promises
 
@@ -616,18 +616,18 @@ Database operations are asynchronous so you should structure your database calls
 
 *index.ts*
 ```js
-async function myFunction() {
-  try {
-    await admin.firestore().collection('MyCollection').doc('MyDocument').set( {key: 'value' } )
-  } catch(error) {
-    console.error(error)
-  } finally {
-    console.log("Finally!");
-  }
-}
+export const upperCaseMe = functions.https.onCall(async (data: any, context: any) => {
+    const original: string = data.text;
+    const uppercase: string = original.toUpperCase();
+    functions.logger.log('upperCaseMe', original, uppercase);
+    await admin.firestore().collection('Messages').add({ original, uppercase });
+    return uppercase;
+});
 ```
 
-or with promises:
+Note that `async` goes into the parameters of `onCall`.
+
+Or with promises:
 
 *index.ts*
 ```
@@ -651,16 +651,14 @@ Remember that [`return` is synchronous and promises are asynchronous](https://fi
 
 ## Firestore get, set, add, update, delete, listDocuments
 
-*Do not* use the Firebase Web version 9 methods `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These methods will cause the TypeScript transpiler to make a mess of your directory structure, adding new directories and files that shouldn't be there.
+*Do not* use the Firebase Web version 9 methods `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These methods will cause the TypeScript transpiler to make a [mess of your directory structure](https://stackoverflow.com/questions/74831161/setdoc-write-to-firestore-from-typescript-functions-messes-up-directory-struct), adding new directories and files that shouldn't be there.
 
-Instead, you can use these methods to write Cloud Functions with the Firestore database:
+Instead, use these [Node.js Server SDK for Google Cloud Firestore](https://cloud.google.com/nodejs/docs/reference/firestore/latest) methods to write Cloud Functions with the Firestore database:
 
-* set
-* update
-* get
-* delete
-
-I can't find documentation for Cloud Functions methods. The closest I can find is for the [Cloud Firestore: Node.js Client](https://cloud.google.com/nodejs/docs/reference/firestore/latest). 
+* set()
+* update()
+* get()
+* delete()
 
 ### CREATE: `set`
 
@@ -770,6 +768,7 @@ admin.firestore().collection('MyCollection').doc('MyDocument').delete()
 
 ### Other methods
 
+
 There may be other methods, such as `add`. The difference between `add` and `set` is that `add` makes a new document when `set` writes data to an existing document that you've identified by its `documentID`.
 
 Another method I've used is `listDocuments()`. This code lists the documents in a collection.
@@ -788,30 +787,7 @@ admin.firestore().collection('Videos').doc(longLanguage).collection('Translation
         });
 ```
 
-### Writing an async call to Firestore
 
-Let's write our UPPERCASE results to Firestore.
-
-*index.ts*
-```js
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-admin.initializeApp();
-
-export const upperCaseMe = functions.https.onCall(async (data: any, context: any) => {
-    const original: string = data.text;
-    const uppercase: string = original.toUpperCase();
-    functions.logger.log('upperCaseMe', original, uppercase);
-    await admin.firestore().collection('Messages').add({ original, uppercase });
-    return uppercase;
-});
-```
-
-The first three lines give us access to `admin`.
-
-Note that `async` goes into the parameters of `onCall`.
-
-We added a line that adds a document to Firestore. We used `await` in this line.
 
 ## Storage
 
