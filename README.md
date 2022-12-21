@@ -649,7 +649,7 @@ All Cloud Functions must terminate with `return`. Even if you don't need anythin
 
 Remember that [`return` is synchronous and promises are asynchronous](https://firebase.google.com/docs/functions/terminate-functions). Your callable function may return `null` rather than the results of an asynchronous call.
 
-## Firestore get, set, add, update, delete, listDocuments
+## Cloud Firestore `get()`, `set()`, `update()`, `delete()`
 
 *Do not* use the Firebase Web version 9 methods `setDoc`, `addDoc`, `updateDoc`, or `deleteDoc`. These methods will cause the TypeScript transpiler to make a [mess of your directory structure](https://stackoverflow.com/questions/74831161/setdoc-write-to-firestore-from-typescript-functions-messes-up-directory-struct), adding new directories and files that shouldn't be there.
 
@@ -768,7 +768,6 @@ admin.firestore().collection('MyCollection').doc('MyDocument').delete()
 
 ### Other methods
 
-
 There may be other methods, such as `add`. The difference between `add` and `set` is that `add` makes a new document when `set` writes data to an existing document that you've identified by its `documentID`.
 
 Another method I've used is `listDocuments()`. This code lists the documents in a collection.
@@ -787,44 +786,19 @@ admin.firestore().collection('Videos').doc(longLanguage).collection('Translation
         });
 ```
 
+## Cloud Storage
 
+Cloud Firestore stores data: objects, arrays, strings, numbers, etc. Cloud Storage stores files. Handling files is very different from handling data.
 
-## Storage
+There's no set of commands like `set()`, `get()`, `update()`, `delete()`. Instead, you use Node.js to handle files. Node.js has a steep learning curve. The Firebase team put together [code samples](https://cloud.google.com/nodejs/docs/reference/storage/latest) for just about anything you might want to do with Cloud Storage. 
 
-As far as I know there are no methods for Storage. Instead, I use Node.js, which is powerful but difficult to learn. Here's how I wrote a file to Storage:
+### `uploadBytes` from your app or front end
 
-```js
-const storage = new Storage({ projectId: 'my-projectId' });
-const bucket = storage.bucket('my-projectId.appspot.com');
+Cloud Storage has [easy to use commands](https://firebase.google.com/docs/storage/web/upload-files):` uploadBytes()` and `uploadString()`. `uploadBytes` is a method for writing a file to Storage. These commands are for your app or front end. Consider structuring your code to handle files from your app or front end. For example, your app calls a Cloud Functions that calls an API to get a file, and then the Cloud Functions writes the file to Cloud Storage. If you can instead get a download URL then pass the download URL from your Cloud Function back to your app or front end, and then use `uploadBytes()` to write the file to Cloud Storage.
 
-var file = bucket.file('Audio/Spanish/' + longAccent + '/' + myWordFile);
+### `uploadBytes()` with `['rawBody']`
 
-const options = { // construct the file to write
-          metadata: {
-            contentType: 'audio/mpeg',
-            metadata: {
-              source: 'Google Text-to-Speech',
-              languageCode: 'es-ES',
-              gender: 'Female'
-            },
-          }
-};
-     
-const [response] = await client.synthesizeSpeech(request);
-await file.save(response.audioContent, options)
-        .then(function() {
-        ...do stuff
-        }
-        .catch(function(error) {
-                console.error(error);
-         }); 
-```
-
-Don't try to copy that code! This is just an example showing Node.js methods such as `file.save`.
-
-### `uploadBytes` with `['rawBody']`
-
-But wait! There is an easy way to write files to Storage from Cloud Functions. [Sounds of thin ice creaking.]
+And you can use `uploadBytes()` in a Cloud Function. [Sounds of thin ice creaking.]
 
 ```js
 import { getStorage, ref, uploadBytes, uploadString, connectStorageEmulator } from "firebase/storage";
@@ -833,9 +807,7 @@ let file = await got('https://audio.oxforddictionaries.com/en/mp3/winter__us_2.m
 await uploadBytes(storageRef, file['rawBody'], metadata);
 ```
 
-`firebase/storage` is a package intended for your app or front-end. It's not intended for Cloud Functions.
-
-`uploadBytes` is a method for writing a file to Storage. In other words, your data must be a file. Data downloaded from an API isn't a file. In JavaScript you can easily make a file with `new File()` but this isn't available in Node.js. I tried to convert a photo on my laptop's drive into a file using WebPack. It was a nightmare.
+Your data must be a file. Data downloaded from an API isn't a file. In JavaScript you can easily make a file with `new File()` but this isn't available in Node.js. I tried to convert a photo on my laptop's drive into a file using WebPack. It was a nightmare.
 
 Then you have to import the file into `index.ts`, which requires converting the file into a CommonJS or ES module.
 
@@ -843,7 +815,7 @@ The above code works because `['rawBody']` lets you skip the part about putting 
 
 If you choose to write to Storage this way, don't tell anyone who told you how to do it.
 
-### Write to Storage from your app or front end
+### AngularFire Storage methods for your app or front end
 
 AngularFire Storage has lots of methods.
 
@@ -852,8 +824,6 @@ import { connectStorageEmulator, deleteObject, fromTask, getBlob, getBytes, getD
 ```
 
 These methods, which are in AngularFire 7.5, aren't in the [AngularFire Storage documention](https://github.com/angular/angularfire/blob/master/docs/storage/storage.md), which appears to be written for AngularFire 6.
-
-Perhaps I can call an API from a Cloud Function and, instead of getting data, I could get a download URL, then pass the download URL to the front end and use `uploadBytes` to write the file to Storage?
 
 # Deploy your Cloud Function to Firebase
 
@@ -899,30 +869,3 @@ You can view you functions, read the logs, get each function's URL, and delete f
 # Testing Cloud Functions
 
 I need to learn this.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
