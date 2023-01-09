@@ -605,9 +605,9 @@ const functions: Functions = getFunctions(app);
 
 As far as I can tell that's as far as you can get in Cloud Functions with Firebase Admin SDK v10. You can't call a Cloud Function with `onCall` or trigger a Cloud Function with `onCreate` using Firebase Admin SDK v10 modular syntax.
 
-## Terminate Cloud Functions with `return` or promises
+## Asynchronous operations with `async await` or promises
 
-Database operations are asynchronous so you should structure your database calls with either `async await`:
+Database operations are asynchronous. Structure your database calls with either `async await` or promises:
 
 *index.ts*
 ```js
@@ -622,7 +622,7 @@ export const upperCaseMe = functions.https.onCall(async (data: any, context: any
 
 Note that `async` goes into the parameters of `onCall`.
 
-Or with promises:
+Promises:
 
 *index.ts*
 ```js
@@ -638,11 +638,11 @@ admin.firestore().collection('MyCollection').doc('MyDocument').get()
    }       
 ```
 
-### `return`
+## Terminate Cloud Functions with `return`
 
 All Cloud Functions must terminate with `return`. Even if you don't need anything returned, terminate with `return 0`. If you don't do this you'll see an error in your logs.
 
-Remember that [`return` is synchronous and promises are asynchronous](https://firebase.google.com/docs/functions/terminate-functions). Your callable function may return `null` rather than the results of an asynchronous call.
+[`return` is synchronous](https://firebase.google.com/docs/functions/terminate-functions). Don't expect a callable function to return the results of an asynchronous operation. Use a promise to return asynchronous results after `return` is returned. If you try to return the results of an asynchronous call you are likely to see `null`.
 
 ## Cloud Firestore `get()`, `set()`, `update()`, `delete()`
 
