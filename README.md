@@ -726,7 +726,7 @@ admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').
 
 To read data from Firestore use `get`. This code gets a document from Firestore.
 
-*index.ts`
+*index.ts*
 ```
 admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').doc(word).collection('Pronunciations').doc(pronunciation).get()
   .then(function(doc) {
@@ -742,7 +742,7 @@ admin.firestore().collection('Dictionaries').doc('Spanish').collection('Words').
 
 This code uses a filter to check if the current user is listed in the collection `Trusted_Users`.
 
-*index.ts`
+*index.ts*
 ```
 admin.firestore().collection('Trusted_Users').where('UID', '==', userID).get()
   .then(function(querySnapshot) {
@@ -759,6 +759,7 @@ admin.firestore().collection('Trusted_Users').where('UID', '==', userID).get()
 
 This will delete a document.
 
+*index.ts*
 ```js
 admin.firestore().collection('MyCollection').doc('MyDocument').delete()
 ```
@@ -769,6 +770,7 @@ There may be other methods, such as `add`. The difference between `add` and `set
 
 Another method I've used is `listDocuments()`. This code lists the documents in a collection.
 
+*index.ts*
 ```js
 admin.firestore().collection('Videos').doc(longLanguage).collection('Translations').listDocuments()
         .then(function(value) {
