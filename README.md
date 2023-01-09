@@ -589,7 +589,7 @@ admin.initializeApp();
 This enables you to use syntax starting with `admin`, a.k.a, the nested namespace hierarchy with the global `admin()` at the top of the hierarchy.
 
 ### Initialize Firebase Admin SDK v10 modular syntax (optional)
-On October 14, 2021, the Firebase team released [Firebase Admin Node.js SDK v10](https://firebase.google.com/docs/admin/migrate-node-v10). The Firebase team recommends using the new, modular syntax. 
+On October 14, 2021, the Firebase team released [Firebase Admin Node.js SDK v10](https://firebase.google.com/docs/admin/migrate-node-v10). The new syntax imports only the modules your Cloud Function needs, making your app download faster.
 
 Initialize your `index.ts`.
 
