@@ -605,6 +605,8 @@ const functions: Functions = getFunctions(app);
 
 As far as I can tell that's as far as you can get in Cloud Functions with Firebase Admin SDK v10. You can't call a Cloud Function with `onCall` or trigger a Cloud Function with `onCreate` using Firebase Admin SDK v10 modular syntax.
 
+Just to confuse you, the Firestore documentation says that Web version 9 is modular and Web version 8 is namespaced, when in the Firebase Admin SDK version 10 is modular and version 9 is namespaced.
+
 ## Asynchronous operations with `async await` or promises
 
 Database operations are asynchronous. Structure your database calls with either `async await` or promises:
