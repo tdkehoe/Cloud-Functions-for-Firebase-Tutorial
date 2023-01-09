@@ -554,7 +554,7 @@ Now you know how to setup Cloud Functions and then call or trigger a Cloud Funct
 
 ## Node.js
 
-Cloud Functions for Firebase is a [Node.js](https://nodejs.org/en/) runtime. You can run any library on it and write your code any way you want. Typically we use the Firebase Admin SDK or the Google Cloud SDK. To rephrase that, there isn't a list of "Cloud Functions commands" that you have to use.
+Cloud Functions for Firebase is a [Node.js](https://nodejs.org/en/) runtime. You can run any library in Cloud Functions and write your code any way you want. Typically we use the Firebase Admin SDK or the Google Cloud SDK. To rephrase that, there isn't a list of "Cloud Functions commands" that you have to use.
 
 ### Check your Node version
 
