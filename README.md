@@ -25,7 +25,7 @@
 - [Writing Cloud Functions](#writing-cloud-functions)
   - [Node.js](#nodejs)
   - [Initialize `admin`](#initialize-admin)
-    - [`require` vs. \`import](#require-vs-import)
+    - [`require` vs. \`import`](#require-vs-import)
   - [Terminate Cloud Functions with `return` or promises](#terminate-cloud-functions-with-return-or-promises)
     - [`return`](#return)
   - [Firestore get, set, add, update, delete, listDocuments](#firestore-get-set-add-update-delete-listdocuments)
@@ -569,7 +569,7 @@ Open `functions/package.json` and check the version of Node:
 
 Cloud Functions currently use Node 16. This will change at some point to Node 18.
 
-### `require` vs. `import
+### `require` vs. `import`
 
 The TypeScript transpiler will reduce ES module syntax (`import`) to CommonJS module syntax (`require`). It's OK to mix these in your `index.ts`. 
 
