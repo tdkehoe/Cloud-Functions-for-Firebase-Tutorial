@@ -115,7 +115,7 @@ firebase login
 firebase init
 ```
 
-Select Firestore, Functions, Storage, and Emulators.
+Select `Firestore`, `Functions`, `Storage`, and `Emulators`.
 
 Select your Firebase project. Accept the defaults.
 
