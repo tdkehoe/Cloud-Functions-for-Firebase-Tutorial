@@ -86,6 +86,8 @@ Set up your project directory before you install Cloud Functions. For Angular:
 ng new MyProject
 ```
 
+You don't need Angular routing for this project.
+
 If you don't want to install a framework you might want to initialize a Github repository.
 
 Install AngularFire, if you're using Angular. Select `Firestore`, `Cloud Functions (callable)`, and `Cloud Storage`.
