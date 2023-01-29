@@ -45,20 +45,20 @@
 - [Testing Cloud Functions](#testing-cloud-functions)
 
 
-This tutorial teaches how to use [Cloud Functions for Firebase](https://firebase.google.com/docs/functions) with the Firestore database, Angular, and AngularFire. You should be able to adapt this tutorial for other apps or frameworks such as React.
+This tutorial teaches how to use [Cloud Functions for Firebase](https://firebase.google.com/docs/functions) with the Firestore database, Angular, and AngularFire. You should be able to adapt this tutorial for other apps or frameworks.
 
 I use Cloud Functions to call APIs such as Google Cloud Translation and IBM Watson Speech-to-Text. You don't want to call APIs from your front end because this exposes your API keys or other credentials. You can safely call APIs from your back end, get the data, process the data, and write the data to your databases or send the data to your front end. 
 
-The official documentation [Explore use cases](https://firebase.google.com/docs/functions/use-cases) goes into depth on other use cases for Cloud Functions. You can trigger a function when data is written to your database. You can perform intensive data processing operations or database sanitization and maintenance.
+The official documentation [Explore use cases](https://firebase.google.com/docs/functions/use-cases) goes into depth on other use cases for Cloud Functions. For example, you can trigger a function when data is written to your database. You can perform intensive data processing operations or database sanitization and maintenance.
 
 ## Servers are obsolete
 
-The "old school" way to do this is to use a server as your back end. In the 2010s running your own server became obsolete as cloud computing services became available. You can run a server in the cloud or you can skip the server and just write functions that run in the cloud. Google Cloud Functions is one provider of this service.
+The "old school" way is to use a server as your back end. In the 2010s running your own server became obsolete as cloud computing services became available. Now you can run a server in the cloud or you can skip the server and just write functions that run in the cloud. Google Cloud Functions is one provider of this service.
 
 Cloud Functions for Firebase is a "wrapper" on Google Cloud Functions that adds funcionality if you're using Firebase databases. Cloud Functions for Firebase makes it easy to write data to Firebase databases. Cloud Functions also enables you to trigger functions when data writes to your databases.
 
 ## Firebase Local Emulator Suite
-There are a couple reasons not to use Cloud Functions for Firebase. First, if you write an infinite loop you can get a big bill from Google. This can happen when you trigger a function when data is written to your database, and then the function processes the data and writes new data to the database, which triggers the function again.
+There are a couple reasons not to use Cloud Functions for Firebase. First, if you write an infinite loop you could get a big bill from Google. This can happen when you trigger a function when data is written to your database, and then the function processes the data and writes new data to the database, which triggers the function again.
 
 Another reason not to use Cloud Functions for Firebase is that deploying an updated function to the cloud takes about ten minutes. Making a change in your code and then waiting ten minutes to see the results is frustrating.
 
@@ -66,7 +66,7 @@ Both of these problems are solved with the Firebase Local Emulator Suite. I can 
 
 # Getting Started
 
-The official documentation [Get started](https://firebase.google.com/docs/functions/get-started) is good, except for if you want to use TypeScript. I'll assume that you're reading the official documentation and I won't go into depth repeating the information. I'll provide more detail in the section on setting up TypeScript.
+I'll assume that you're reading the [official documentation](https://firebase.google.com/docs/functions/get-started) and I won't go into depth repeating the information. I'll provide more detail in the section on setting up TypeScript.
 
 Create a Firebase project from your [Firebase console](https://console.firebase.google.com/u/0/).
 
