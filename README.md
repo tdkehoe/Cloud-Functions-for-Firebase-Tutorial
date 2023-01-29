@@ -104,7 +104,6 @@ Set up `Firestore`, `Cloud Functions (callable)`, and `Cloud Storage`.
 In the project directory, install the Firebase Functions and Firebase Admin packages locally.
 
 ```
-cd MyProject
 npm install firebase-functions
 npm install firebase-admin
 ```
