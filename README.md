@@ -97,7 +97,7 @@ cd MyProject
 ng add @angular/fire
 ```
 
-Select `Firestore`, `Cloud Functions (callable)`, and `Cloud Storage`.
+Set up `Firestore`, `Cloud Functions (callable)`, and `Cloud Storage`.
 
 ## Install Firebase node modules
 
