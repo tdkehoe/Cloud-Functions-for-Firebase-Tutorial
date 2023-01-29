@@ -45,7 +45,7 @@
 - [Testing Cloud Functions](#testing-cloud-functions)
 
 
-This tutorial teaches how to use [Cloud Functions for Firebase](https://firebase.google.com/docs/functions) with Firebase database, Angular, and AngularFire. You should be able to adapt this tutorial for other apps or frameworks such as React.
+This tutorial teaches how to use [Cloud Functions for Firebase](https://firebase.google.com/docs/functions) with the Firebase Firestore database, Angular, and AngularFire. You should be able to adapt this tutorial for other apps or frameworks such as React.
 
 I use Cloud Functions to call APIs such as Google Cloud Translation and IBM Watson Speech-to-Text. You don't want to call APIs from your front end because this exposes your API keys or other credentials. You can safely call APIs from your back end, get the data, process the data, and write the data to your databases or send the data to your front end. 
 
