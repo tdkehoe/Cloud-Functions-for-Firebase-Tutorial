@@ -231,7 +231,7 @@ If you don't transpile your TypeScript into JavaScript you'll get this error mes
 
 ## How to break TypeScript
 
-The wrong code in `index.ts` will cause the TypeScript compiler to remove `lib/index.js` and `lib/index.js.map` and replace them with a directory structure that you don't want:
+The wrong code in `index.ts` will cause the TypeScript compiler to remove `lib/index.js` and `lib/index.js.map` and replace them with (a directory structure that you don't want)[https://stackoverflow.com/questions/74831161/setdoc-write-to-firestore-from-typescript-functions-messes-up-directory-struct]:
 
 ```
 MyProject
