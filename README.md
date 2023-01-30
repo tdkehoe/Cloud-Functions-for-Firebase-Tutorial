@@ -257,7 +257,14 @@ MyProject
 
 If you see this directory structure delete `/lib/environments` and `/lib/functions` and figure out what code you wrote broke the transpiler.
 
+You can break the transpiler by calling Firebase modules that belong in your Angular front-end app, not in your back-end Cloud Functions:
 
+```
+import { initializeApp } from "firebase/app";
+import { getFirestore, setDoc, doc } from "firebase/firestore";
+const firebaseApp = initializeApp(environment.firebase);
+const firestore = getFirestore(firebaseApp); //
+```
 
 ### Start emulators
 
