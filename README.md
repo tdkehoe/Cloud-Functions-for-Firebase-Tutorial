@@ -891,6 +891,18 @@ Except that `firebase deploy` doesn't handle IAM service accounts. Instead, use 
 gcloud functions deploy EStranslateEN --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
 ```
 
+### IAM service accounts in the Firebase Emulator Suite
+
+I can't get my IAM service account to work in the Firebase Emulator. I get this error:
+
+```
+Cloud Translation API has not been used in project 563584335869 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/translate.googleapis.com/overview?project=563584335869 then retry.
+```
+
+Going to that URL throws an error: `You do not have sufficient permissions to view this page`. 
+
+My guess is that `project 563584335869` is the Firebase Emulator Suite. Google is looking for an IAM service account for Firebase Emulator Suite, not in my Google Cloud Console.
+
 # Use Functions in your Firebase Console
 
 You can view you functions, read the logs, get each function's URL, and delete functions from your Firebase Console.
