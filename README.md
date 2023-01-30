@@ -255,7 +255,7 @@ MyProject
 │   └── tsconfig.json
 ```
 
-If you see this directory structure delete `/lib/environments` and `/lib/functions` and figure out what code you wrote broke the transpiler.
+If you see this directory structure delete `/lib/environments` and `/lib/functions` and delete the code you wrote that broke the transpiler.
 
 You can break the transpiler by calling Firebase modules that belong in your Angular front-end app, not in your back-end Cloud Functions:
 
