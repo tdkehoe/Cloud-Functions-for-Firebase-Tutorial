@@ -630,7 +630,7 @@ If you're writing your Cloud Functions in JavaScript use the CommonJS module syn
 
 *index.ts*
 ```
-const functions = require('firebase-functions');
+import * as functions from "firebase-functions";
 const admin = require('firebase-admin');
 admin.initializeApp();
 ```
