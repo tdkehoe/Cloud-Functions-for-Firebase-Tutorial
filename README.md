@@ -127,7 +127,16 @@ If you select TypeScript, the next question asks if you want to use ESLint. My c
 
 The last question asks about installing dependencies. Say yes.
 
-Accept the defaults for any other questions. Then you'll see:
+Accept the defaults for any other questions. 
+
+### Set up emulators
+
+You might be asked to set up the emulators in the middle of setting up TypeScript. Select `Firestore`, `Functions`, and `Storage`.
+
+Accept the default ports and other questions.
+
+### Finish setting up TypeScript
+Then you'll see:
 
 ```
 ✔  Firebase initialization complete!
@@ -143,34 +152,31 @@ Install TypeScript globally.
 npm install -g typescript
 ```
 
-### Set up emulators
-
-You might be asked to set up the emulators in the middle of setting up TypeScript. Select `Firestore`, 'Functions`, and `Storage`.
-
 ### Update npm packages and `package.json` (optional)
 
-You should have two `package.json` files, one for your app or front-end framework and one for your Cloud Functions.
+Open your project in your code editor. You should have two `package.json` files, one for your app or front-end framework and one for your Cloud Functions.
 
 ```
-MyProject/`package.json` // app or front-end framework
-MyProject/functions/`package/json` // Cloud Functions
+MyProject/package.json // app or front-end framework
+MyProject/functions/package.json // Cloud Functions
 ```
 
-In your `functions` folder, check your npm packages versions:
+In `MyProject/functions/`, check your npm packages versions:
 
 ```
-npm list
+cd functions
+npm outdated
 ```
 
 Open `functions/package.json`. Update the version numbers of `firebase-admin`, `firebase-functions`, and `typescript`. 
 
-Check that you have the latest versions.
+The latest TypeScript version is at
 
 ```
-npm outdated
+https://www.npmjs.com/package/typescript
 ```
 
-This should return without saying anything, which indicates that you have the latest versions of all your npm packages. Run this regularly (weekly) and when it shows new versions available update your npm packages:
+Run `npm outdated` weekly and when it shows new versions available update your npm packages:
 
 ```
 npm update
@@ -183,6 +189,8 @@ Open `functions/tsconfig.json`. Add
 ```js
 "moduleResolution": "node",
 ```
+
+Change `target` to `ESNext`.
 
 ### Transpile TypeScript into JavaScript (NOT OPTIONAL!)
 
@@ -220,6 +228,36 @@ If you don't transpile your TypeScript into JavaScript you'll get this error mes
 ```
  SyntaxError: Cannot use import statement outside a module
 ```
+
+## How to break TypeScript
+
+The wrong code in `index.ts` will cause the TypeScript compiler to remove `lib/index.js` and `lib/index.js.map` and replace them with a directory structure that you don't want:
+
+```
+MyProject
+├── firebase.json
+├── firestore.indexes.json
+├── firestore.rules
+├── functions
+│   ├── lib
+│   │   ├── environments
+│   │   |   ├── environments.js
+│   │   |   ├── environments.js.map
+│   │   └── functions
+│   │   |   ├── src
+│   │   |   |   ├── index.ts
+│   │   |   |   ├── index.ts.map
+│   ├── node_modules
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   └── index.ts
+│   └── tsconfig.json
+```
+
+If you see this directory structure delete `/lib/environments` and `/lib/functions` and figure out what code you wrote broke the transpiler.
+
+
 
 ### Start emulators
 
