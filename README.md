@@ -297,7 +297,7 @@ You should see
 
 Now you've completed Firebase initialization! 
 
-# Call and trigger Cloud Functions
+# Call vs. trigger Cloud Functions
 
 Cloud Functions for Firebase can be executed in three ways:
 
@@ -594,6 +594,22 @@ Next, we use `onCreate`, which is for new documents. There are four  keywords we
 Next, the parameters are `snap` and `context`, not `data` and `context`. In the body of the Cloud Function we change `data.text` to `snap.data().original`.
 
 The last difference is the `return`. Instead of returning the UPPERCASE message to the sender, the UPPERCASE message is written to Firestore. In this case the data is written to the document that triggered the function.
+
+### Path to your trigger
+
+This is not the path to your Firestore trigger:
+
+```js
+export const TriggerMyCloudFunction = functions.firestore.document('Thing').collection('Things').document('{thingID}').onCreate((snap, context) => {
+```
+
+This is the path to your Firestore trigger:
+
+```js
+export const TriggerMyCloudFunction = functions.firestore.document('Thing/Things/{thingID}').onCreate((snap, context) => {
+```
+
+The path to a Firestore location doesn't look like the path to a Firestore location in the front end.
 
 There's lots more about triggerable Cloud Functions in the [official documentation](https://firebase.google.com/docs/functions/firestore-events), plus triggers from Auth, Cloud Storage, and other Firebase databases.
 
