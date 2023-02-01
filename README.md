@@ -907,6 +907,14 @@ Except that `firebase deploy` doesn't handle IAM service accounts. Instead, use 
 gcloud functions deploy EStranslateEN --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
 ```
 
+That works for `index.js` (JavaScript) Cloud Functions but I can't get `gcloud functions deploy` to work with `index.ts`(TypeScript) Cloud Functions. The error is
+
+```
+Build failed: lib/index.js does not exist; Error ID: bc73f5cd
+```
+
+The directory structure is 
+
 ### IAM service accounts in the Firebase Emulator Suite
 
 I can't get my IAM service account to work in the Firebase Emulator. I get this error:
