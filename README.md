@@ -899,25 +899,18 @@ Putting API keys and other credentials in your `index.ts` may not be a good idea
 Cloud Functions have a way to manage credentials with [parameterized configuration](https://firebase.google.com/docs/functions/config-env#params). I haven't tried this, I will work on this.
 
 ### Use an IAM service account
-I try to use service accounts whenever possible. But hooking up an IAM service account to Cloud Functions is challenging.
 
-If you're using JavaScript Cloud Functions you can connect a service account to a Cloud Function by deploy the function as a Google Cloud Function:
+Go to `https://console.cloud.google.com/iam-admin/iam`. 
 
-```
-gcloud functions deploy upperCaseMe --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
-```
+Look for a service account named "App Engine default service account".
 
-If you do this, no credentials are needed in your app. The service account works like magic!
+Use only this service account with your Cloud Functions. Add new roles to this service account as needed. Don't make new service accounts.
 
-Firebase deploy won't hook up a service account. This doesn't work:
+To add a new role, click the pencil icon to the right of the service account. Then click "Add another role". Then save the changes.
 
-```
-firebase deploy --only functions:upperCaseMe --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
-```
+### Hook up your service account to your Cloud Functions
 
-`gcloud functions deploy` doesn't work with TypeScript. It looks for `lib/index.js` in the `src` directory, not in the parent directory.
-
-With TypseScript or Javascript, you can hook up a service account by downloading the credentials and then initializing `admin` with the credentials:
+Hook up a service account by downloading the key and then initializing `admin` with the credentials:
 
 *index.ts*
 ```js
@@ -941,7 +934,7 @@ admin.initializeApp({
 });
 ```
 
-The security of this is questionable. Instead, put your service key into your `environments` folder, perhaps in a `service-accounts` folder. Then import the service key:
+The security of this is questionable. Instead, try to put your service key into your `environments` folder, perhaps in a `service-accounts` folder. Then import the service key:
 
 *index.ts*
 ```js
@@ -956,7 +949,30 @@ admin.initializeApp({
 });
 ```
 
-You must add `"resolveJsonModule": true,` to the `compilerOptions` in your `tsconfig.json`. The story is that the TypeScript developers want you to stop and consider whether you really want to import a JSON file, as this uses substantial computing resources.
+You must add `"resolveJsonModule": true,` to the `compilerOptions` in your `tsconfig.json`.
+
+I can't get this to work. The only way that works for me is to out the service account key into `index.ts`.
+
+### Deploy a service account with `gcloud`
+
+This is a questionable practice.
+
+If you're using JavaScript Cloud Functions you can connect a service account to a Cloud Function by deploying the function as a Google Cloud Function:
+
+```
+gcloud functions deploy upperCaseMe --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
+```
+
+If you do this, no credentials are needed in your app. The service account works like magic!
+
+Firebase deploy won't hook up a service account. This doesn't work:
+
+```
+firebase deploy --only functions:upperCaseMe --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
+```
+
+`gcloud functions deploy` doesn't work with TypeScript. It looks for `lib/index.js` in the `src` directory, not in the parent directory.
+
 
 ### IAM service accounts in the Firebase Emulator Suite
 
