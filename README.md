@@ -899,25 +899,68 @@ Putting API keys and other credentials in your `index.ts` may not be a good idea
 Cloud Functions have a way to manage credentials with [parameterized configuration](https://firebase.google.com/docs/functions/config-env#params). I haven't tried this, I will work on this.
 
 ### Use an IAM service account
-Even better is to use an IAM service account. This was baffling to me at first, and then it seemed like magic. I set up an IAM service account, for example for Google Cloud Translate, then I can deploy my Cloud Function with the IAM service account, and then no credentials are needed anywhere in my code!
+I try to use service accounts whenever possible. But hooking up an IAM service account to Cloud Functions is challenging.
 
-Except that `firebase deploy` doesn't handle IAM service accounts. Instead, use `gcloud functions deploy`:
-
-```
-gcloud functions deploy EStranslateEN --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
-```
-
-That works for `index.js` (JavaScript) Cloud Functions but I can't get `gcloud functions deploy` to work with `index.ts`(TypeScript) Cloud Functions. The error is
+If you're using JavaScript Cloud Functions you can connect a service account to a Cloud Function by deploy the function as a Google Cloud Function:
 
 ```
-Build failed: lib/index.js does not exist; Error ID: bc73f5cd
+gcloud functions deploy upperCaseMe --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
 ```
 
-The directory structure is 
+If you do this, no credentials are needed in your app. The service account works like magic!
+
+Firebase deploy won't hook up a service account. This doesn't work:
+
+```
+firebase deploy --only functions:upperCaseMe --service-account google-cloud-translate@my-projectId.iam.gserviceaccount.com
+```
+
+`gcloud functions deploy` doesn't work with TypeScript. It looks for `lib/index.js` in the `src` directory, not in the parent directory.
+
+With TypseScript or Javascript, you can hook up a service account by downloading the credentials and then initializing `admin` with the credentials:
+
+*index.ts*
+```js
+admin.initializeApp({
+  apiKey: 'abc123', 
+  authDomain: 'my-project.firebaseapp.com', 
+  credential: admin.credential.cert({
+    "type": "service_account",
+    "project_id": "my-project",
+    "private_key_id": "123abc",
+    "private_key": "-----BEGIN PRIVATE KEY-----\123abc\-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk-1234x@my-project.iam.gserviceaccount.com",
+    "client_id": "0987654321",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-1234x%40my-project.iam.gserviceaccount.com"
+  }),
+  databaseURL: 'https://my-project.firebaseio.com',
+  storageBucket: 'gs://my-project.appspot.com', 
+});
+```
+
+The security of this is questionable. Instead, put your service key into your `environments` folder, perhaps in a `service-accounts` folder. Then import the service key:
+
+*index.ts*
+```js
+const serviceAccount = require('../../environments/service_account_keys/my-project-firebase-adminsdk-1234x-abcd.json');
+
+admin.initializeApp({
+  apiKey: 'abc123', 
+  authDomain: 'my-project.firebaseapp.com', 
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://my-project.firebaseio.com',
+  storageBucket: 'gs://my-project.appspot.com', 
+});
+```
+
+You must add `"resolveJsonModule": true,` to the `compilerOptions` in your `tsconfig.json`. The story is that the TypeScript developers want you to stop and consider whether you really want to import a JSON file, as this uses substantial computing resources.
 
 ### IAM service accounts in the Firebase Emulator Suite
 
-I can't get my IAM service account to work in the Firebase Emulator. I get this error:
+I can't get service accounts to work in the Firebase Emulator. I get this error:
 
 ```
 Cloud Translation API has not been used in project 563584335869 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/translate.googleapis.com/overview?project=563584335869 then retry.
