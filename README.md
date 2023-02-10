@@ -541,7 +541,7 @@ Access to fetch at 'https://us-central1-my-project.cloudfunctions.net/myFunction
 
 CORS errors seem to occur randomly. A function that was working will throw a CORS error, with no changes to the code.
 
-This [StackOverflow question[(https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) has lots of solutions to this problem. 
+This [StackOverflow question](https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) has lots of solutions to this problem. 
 
 One solution that worked for me was to make the Cloud Function publically callable. This is a security risk so should only be done for development. Go to your [Google Cloud Console Dashboard](https://console.cloud.google.com/home/dashboard). Go to Resources, then Cloud Functions. From your list of Cloud Functions, click on the function, then the PERMISSIONS tab, click GRANT ACCESS, then under Add principals type in `allUsers`, then under Assign roles select Cloud Functions and then Cloud Function Invoker and then SAVE.
 
