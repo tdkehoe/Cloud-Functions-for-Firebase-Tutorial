@@ -523,7 +523,7 @@ Comment out the line with `httpsCallable` and comment in the line with `httpsCal
 
 Run your code again. A Firebase team member told me, "`httpsCallableFromURL` is for cases when you cannot use the normal way that the SDK locates the backend, for example, if you are hosting the callable function on some service that is not a normal Cloud Functions backend, or you are trying to invoke a function in a project that's not part of your app."
 
-In other words, you shouldn't need to use `httpsCallableFromURL`. However, I've twice had `httpsCallable` fail and `httpsCallableFromURL` work. In the first case, `httpsCallable` repeatedly threw a CORS error but `httpsCallableFromURL` executed without error. Then when I tried `httpsCallable` again it executed without the CORS error. 
+In other words, you shouldn't need to use `httpsCallableFromURL`. However, I've twice had `httpsCallable` fail and `httpsCallableFromURL` work. In the first case, `httpsCallable` repeatedly threw a CORS error but `httpsCallableFromURL` executed without error. Then when I tried `httpsCallable` again it executed without the CORS error.
 
 In the second case, I'd initialized Firebase incorrectly (initialize Firebase in `app.module.ts`, not in `app.component.ts`!). `httpsCallableFromURL` executed correctly. The emulator logs showed that `httpsCallable` executed correctly but in the browser console the Cloud Function returned `null`.
 
@@ -541,9 +541,59 @@ Access to fetch at 'https://us-central1-my-project.cloudfunctions.net/myFunction
 
 CORS errors seem to occur randomly. A function that was working will throw a CORS error, with no changes to the code.
 
-This [StackOverflow question](https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) has lots of solutions to this problem. 
+There are multiple ways to fix a CORS error, depending on your situation.
 
-One solution that worked for me was to make the Cloud Function publically callable. This is a security risk so should only be done for development. Go to your [Google Cloud Console Dashboard](https://console.cloud.google.com/home/dashboard). Go to Resources, then Cloud Functions. From your list of Cloud Functions, click on the function, then the PERMISSIONS tab, click GRANT ACCESS, then under Add principals type in `allUsers`, then under Assign roles select Cloud Functions and then Cloud Function Invoker and then SAVE.
+#### IAM service accounts
+
+If your Cloud Functions use a service account for your credentials you must provide principals and roles to invoke your Cloud Functions.
+
+Go to your [Google Cloud Console Dashboard](https://console.cloud.google.com/home/dashboard). Go to *Resources*, then *Cloud Functions*. From your list of Cloud Functions, click on the function, then the *PERMISSIONS* tab, click *+GRANT ACCESS*, then under *Add principals* type in `allUsers`, then under *Assign roles* select *Cloud Functions* and then *Cloud Function Invoker* and finally *SAVE*.
+
+This makes your Cloud Function publicly accessible, which is a security risk. These articles explain how to write code in the body of your function to check whatever form of authentication is being provided by the caller, which for callables, is going to be Firebase Auth.
+
+[How to restrict Firebase Cloud Function to accept requests only from Firebase Hosting website](https://stackoverflow.com/questions/69291334/how-to-restrict-firebase-cloud-function-to-accept-requests-only-from-firebase-ho)
+
+[Firebase functions authorize only requests from Firebase hosting app](https://stackoverflow.com/questions/67649115/firebase-functions-authorize-only-requests-from-firebase-hosting-app)
+
+#### Set "Access-Control-Allow-Origin" in firebase.json
+
+The CORS error message asks you to put `Access-Control-Allow-Origin` in the headers. If you host your Angular app on Firebase you can do this in `firebase.json`
+
+*firebase.json*
+```js
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [ {
+      "source": "/myCloudFunction",
+      "headers": [ {
+        "key": "Access-Control-Allow-Origin",
+        "value": "*"
+      } ]
+    } ]
+  },
+```
+
+This didn't work for me when my Angular app was running locally at `http://localhost:4200/home`.
+
+#### Imports `cors` with `onRequest`
+
+If you call your Cloud Function with `onRequest` (not `onCall` or `onCreate`) you can import the npm module `cors` into your Cloud Functions. The following code is for JavaScript. [This question](https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) shows how to use this in TypeScript. I don't use `onRequest`.
+
+*index.js*
+```
+const cors = require('cors')({origin: true});
+
+exports.fn = functions.https.onRequest((req, res) => {
+    cors(req, res, () => {
+        // your function body here - use the provided req and res from cors
+    })
+});
+```
 
 #### The emulator URL
 
