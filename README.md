@@ -628,6 +628,12 @@ This URL is available in your Firebase Console in your list of Functions. It sho
 httpsCallableFromURL(this.functions, 'https://us-central1-myprojectId.cloudfunctions.net/upperCaseMe');
 ```
 
+#### Writing to the emulator vs. writing to the cloud
+
+If your Cloud Function is called with the emulator URL, it will write to Firestore (or Storage) in the emulator.
+
+If your Cloud Function is called with the Firebase cloud URL, it will write to Firestore (or Storage) in the cloud.
+
 ## Trigger your Cloud Function
 
 The third way to execute a Cloud Function is to write to Firestore or another Firebase database.
