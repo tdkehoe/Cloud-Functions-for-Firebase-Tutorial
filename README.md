@@ -940,6 +940,188 @@ import { connectStorageEmulator, deleteObject, fromTask, getBlob, getBytes, getD
 
 These methods, which are in AngularFire 7.5, aren't in the [AngularFire Storage documention](https://github.com/angular/angularfire/blob/master/docs/storage/storage.md), which appears to be written for AngularFire 6.
 
+### Get a Storage download URL
+
+Getting the download URL when uploading a file to Google/Firebase Cloud Storage is non-trivial. StackOverflow has many answers to [this question](https://stackoverflow.com/questions/42956250/get-download-url-from-file-uploaded-with-cloud-functions-for-firebase).
+
+There are three types of download URLS:
+
+ 1. signed download URLs, which are temporary and have security features
+ 2. token download URLs, which are persistent and have security features
+ 3. public download URLs, which are persistent and lack security
+
+There are three ways to get a token download URL. The other two download URLs have only one way to get them.
+
+**From the Firebase Storage Console**
+
+You can get the download URL from Firebase Storage console:
+
+[![enter image description here][1]][1]
+
+The download URL looks like this:
+
+```
+https://firebasestorage.googleapis.com/v0/b/languagetwo-cd94d.appspot.com/o/Audio%2FEnglish%2FUnited_States-OED-0%2Fabout.mp3?alt=media&token=489c48b3-23fb-4270-bd85-0a328d2808e5
+```
+
+The first part is a standard path to your file. At the end is the token. This download URL is permanent, i.e., it won't expire, although you can revoke it.
+
+**getDownloadURL() From the Front End**
+
+The [documentation][2] tells us to use `getDownloadURL()`:
+
+```js
+let url = await firebase.storage().ref('Audio/English/United_States-OED-' + i +'/' + $scope.word.word + ".mp3").getDownloadURL();
+```
+
+This gets the same download URL that you can get from your Firebase Storage console. This method is easy but requires that you know the path to your file, which in my app is about 300 lines of code, for a relatively simple database structure. If your database is complex this would be a nightmare. And you could upload files from the front end, but this would expose your credentials to anyone who downloads your app. So for most projects you'll want to upload your files from your Node back end or Google Cloud Functions, then get the download URL and save it to your database along with other data about your file.
+
+**getSignedUrl() for Temporary Download URLs**
+
+[getSignedUrl()][3] is easy to use from a Node back end or Google Cloud Functions:
+
+```js
+  function oedPromise() {
+    return new Promise(function(resolve, reject) {
+      http.get(oedAudioURL, function(response) {
+        response.pipe(file.createWriteStream(options))
+        .on('error', function(error) {
+          console.error(error);
+          reject(error);
+        })
+        .on('finish', function() {
+          file.getSignedUrl(config, function(err, url) {
+            if (err) {
+              console.error(err);
+              return;
+            } else {
+              resolve(url);
+            }
+          });
+        });
+      });
+    });
+  }
+```
+A signed download URL looks like this:
+
+```
+https://storage.googleapis.com/languagetwo-cd94d.appspot.com/Audio%2FSpanish%2FLatin_America-Sofia-Female-IBM%2Faqu%C3%AD.mp3?GoogleAccessId=languagetwo-cd94d%40appspot.gserviceaccount.com&Expires=4711305600&Signature=WUmABCZIlUp6eg7dKaBFycuO%2Baz5vOGTl29Je%2BNpselq8JSl7%2BIGG1LnCl0AlrHpxVZLxhk0iiqIejj4Qa6pSMx%2FhuBfZLT2Z%2FQhIzEAoyiZFn8xy%2FrhtymjDcpbDKGZYjmWNONFezMgYekNYHi05EPMoHtiUDsP47xHm3XwW9BcbuW6DaWh2UKrCxERy6cJTJ01H9NK1wCUZSMT0%2BUeNpwTvbRwc4aIqSD3UbXSMQlFMxxWbPvf%2B8Q0nEcaAB1qMKwNhw1ofAxSSaJvUdXeLFNVxsjm2V9HX4Y7OIuWwAxtGedLhgSleOP4ErByvGQCZsoO4nljjF97veil62ilaQ%3D%3D
+```
+
+The signed URL has an expiration date and long signature. The documentation for the command line [gsutil signurl -d][4] says that signed URLs are temporary: the default expiration is one hour and the maximum expiration is seven days. 
+
+I'm going to rant here that [getSignedUrl][5] never says that your signed URL will expire in a week. The documentation code has `3-17-2025` as the expiration date, suggesting that you can set the expiration years in the future. My app worked perfectly, and then crashed a week later. The error message said that the signatures didn't match, not that the download URL had expired. I made various changes to my code, and everything worked...until it all crashed a week later. This went on for more than a month of frustration.
+
+**Make Your File Publicly Available**
+
+You can set the permissions on your file to public read, as explained in the [documentation][6]. This can be done from the Cloud Storage Browser or from your Node server. You can make one file public or a directory or your entire Storage database. Here's the Node code:
+
+```js
+var webmPromise = new Promise(function(resolve, reject) {
+      var options = {
+        destination: ('Audio/' + longLanguage + '/' + pronunciation + '/' + word + '.mp3'),
+        predefinedAcl: 'publicRead',
+        contentType: 'audio/' + audioType,
+      };
+
+      synthesizeParams.accept = 'audio/webm';
+      var file = bucket.file('Audio/' + longLanguage + '/' + pronunciation + '/' + word + '.webm');
+      textToSpeech.synthesize(synthesizeParams)
+      .then(function(audio) {
+        audio.pipe(file.createWriteStream(options));
+      })
+      .then(function() {
+        console.log("webm audio file written.");
+        resolve();
+      })
+      .catch(error => console.error(error));
+    });
+```
+
+The result will look like this in your Cloud Storage Browser:
+
+[![enter image description here][7]][7]
+
+Anyone can then use the standard path to download your file:
+
+```
+https://storage.googleapis.com/languagetwo-cd94d.appspot.com/Audio/English/United_States-OED-0/system.mp3
+```
+
+Another way to make a file public is to use the method [makePublic()][8]. I haven't been able to get this to work, it's tricky to get the bucket and file paths right.
+
+An interesting alternative is to use [Access Control Lists][9]. You can make a file available only to users whom you put on a list, or use `authenticatedRead` to make the file available to anyone who is logged in from a Google account. If there were an option "anyone who logged into my app using Firebase Auth" I would use this, as it would limit access to only my users.
+
+**Build Your Own Download URL with firebaseStorageDownloadTokens** 
+
+Several answers describe an undocumented Google Storage object property `firebaseStorageDownloadTokens`. With this you can tell Storage the token you want to use. You can generate a token with the `uuid` Node module. Four lines of code and you can build your own download URL, the same download URL you get from the console or `getDownloadURL()`. The four lines of code are:
+
+```js
+const uuidv4 = require('uuid/v4');
+const uuid = uuidv4();
+```
+
+```js
+metadata: { firebaseStorageDownloadTokens: uuid }
+```
+
+```js
+https://firebasestorage.googleapis.com/v0/b/" + bucket.name + "/o/" + encodeURIComponent('Audio/' + longLanguage + '/' + pronunciation + '/' + word + '.webm') + "?alt=media&token=" + uuid);
+```
+
+Here's the code in context:
+
+
+```js
+var webmPromise = new Promise(function(resolve, reject) {
+  var options = {
+    destination: ('Audio/' + longLanguage + '/' + pronunciation + '/' + word + '.mp3'),
+    contentType: 'audio/' + audioType,
+    metadata: {
+      metadata: {
+        firebaseStorageDownloadTokens: uuid,
+      }
+    }
+  };
+
+      synthesizeParams.accept = 'audio/webm';
+      var file = bucket.file('Audio/' + longLanguage + '/' + pronunciation + '/' + word + '.webm');
+      textToSpeech.synthesize(synthesizeParams)
+      .then(function(audio) {
+        audio.pipe(file.createWriteStream(options));
+      })
+      .then(function() {
+        resolve("https://firebasestorage.googleapis.com/v0/b/" + bucket.name + "/o/" + encodeURIComponent('Audio/' + longLanguage + '/' + pronunciation + '/' + word + '.webm') + "?alt=media&token=" + uuid);
+      })
+      .catch(error => console.error(error));
+});
+```
+
+That's not a typo--you have to nest `firebaseStorageDownloadTokens` in double layers of `metadata:`! 
+
+Doug Stevenson pointed out that `firebaseStorageDownloadTokens` is not an official Google Cloud Storage feature. You won't find it in any Google documentation, and there's no promise it will be in future version of `@google-cloud`. I like `firebaseStorageDownloadTokens` because it's the only way to get what I want, but it has a "smell" that it's not safe to use. 
+
+**Why No getDownloadURL() from Node?**
+
+As @Clinton wrote, Google should make a `file.getDownloadURL()` a method in `@google-cloud/storage` (i.e., your Node back end). I want to upload a file from Google Cloud Functions and get the token download URL.
+
+
+  [1]: https://i.stack.imgur.com/f61iV.png
+  [2]: https://firebase.google.com/docs/storage/web/download-files
+  [3]: https://cloud.google.com/nodejs/docs/reference/storage/2.5.x/File#getSignedUrl
+  [4]: https://cloud.google.com/storage/docs/gsutil/commands/signurl#options
+  [5]: https://cloud.google.com/nodejs/docs/reference/storage/1.5.x/File#getSignedUrl
+  [6]: https://cloud.google.com/storage/docs/access-control/making-data-public
+  [7]: https://i.stack.imgur.com/V7xzE.png
+  [8]: https://googleapis.dev/nodejs/storage/latest/File.html#makePublic
+  [9]: https://cloud.google.com/storage/docs/access-control/lists
+
+
+
+
+
+
 # Deploy your Cloud Function to Firebase
 
 To call the Cloud Function in the Firebase Cloud, first deploy your Cloud Function from your `functions` folder:
