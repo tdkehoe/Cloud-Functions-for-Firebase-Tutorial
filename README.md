@@ -742,44 +742,102 @@ As far as I can tell that's as far as you can get in Cloud Functions with Fireba
 
 Just to confuse you, the Firestore documentation says that Web version 9 is modular and Web version 8 is namespaced, when in the Firebase Admin SDK version 10 is modular and version 9 is namespaced.
 
-## Asynchronous operations with `async await` or promises
+## Terminate Cloud Functions and (maybe) return results from callable Cloud Functions: Synchronous vs async
 
-Database operations are asynchronous. Structure your database calls with either `async await` or promises:
+Cloud Functions must be [terminated](https://firebase.google.com/docs/functions/terminate-functions) to avoid excessive billing charges. 
 
-*index.ts*
-```js
-export const upperCaseMe = functions.https.onCall(async (data: any, context: any) => {
-    const original: string = data.text;
-    const uppercase: string = original.toUpperCase();
-    functions.logger.log('upperCaseMe', original, uppercase);
-    await admin.firestore().collection('Messages').add({ original, uppercase });
-    return uppercase;
-});
-```
+Synchronous callable Cloud Functions can easily return results to the front end function that called them. Async callable Cloud Functions can't return results to the front end, unless you set up an Observer for Firestore. 
 
-Note that `async` goes into the parameters of `onCall`.
+Triggerable async Cloud Functions can't return anything to the front end, unless you set up an Observer for Firestore. 
 
-Promises:
+Cloud Function operations with Storage can't be observed or returned to the front end.
 
-*index.ts*
-```js
-admin.firestore().collection('MyCollection').doc('MyDocument').get()
-  .then(function(doc) {
-        if (doc.exists) {
-          console.log("Document found.");
-        } else {
-          console.log("No such document.");
-        }
-   .catch (error) {
-        console.error(error);
-   }       
-```
-
-## Terminate Cloud Functions with `return`
+### Return synchronous results and terminate Cloud Function
 
 All Cloud Functions must terminate with `return`. Even if you don't need anything returned, terminate with `return 0`. If you don't do this you'll see an error in your logs.
 
-[`return` is synchronous](https://firebase.google.com/docs/functions/terminate-functions). Don't expect a callable function to return the results of an asynchronous operation. Use a promise to return asynchronous results after `return` is returned. If you try to return the results of an asynchronous call you are likely to see `null`.
+Use `return` to send synchronous results to the front end function that called the Cloud Function. The `upperCaseMe` Cloud Function does this.
+
+*index.ts*
+```js
+export const upperCaseMe = functions.https.onCall((data, context) => {
+  try {
+    const original = data.message;
+    const uppercase = original.toUpperCase();
+    functions.logger.log('upperCaseMe', original, uppercase);
+    return uppercase;
+  } catch (error) {
+    console.error(error);
+    return 0;
+  }
+});
+```
+
+This Cloud Function returns an UPPERCASE string, if successful, or returns 0 if unsuccessful.
+
+### Asynchronous Cloud Functions
+
+Asynchronous Cloud Functions must return a promise to prevent the Cloud Function from terminating prematurely. `return` will always be `null` with async Cloud Functions because `return` is synchronous (`return` executes before the asycn results come back). 
+
+Terminate async Cloud Functions by returning the database call:
+
+*index.ts*
+```js
+export const writeUppercase2FirestorePromise = functions.https.onCall((data: any, context: any) => {
+  console.table(data);
+  const original: string = data.message;
+  const uppercase: string = original.toUpperCase();
+  return admin.firestore().collection('Messages').add({ original, uppercase })
+    .then(() => {
+      console.log('Write succeeded!');
+    })
+    .catch((error: any) => {
+      console.error(error);
+    });
+});
+```
+
+The result will return `null` to the front end and then log "Write succeeded!" to the Cloud Functions console.
+
+Async await. Note that `async` goes into the parameters of `onCall`.
+
+*index.ts*
+```js
+export const writeUppercase2FirestoreAsyncAwait = functions.https.onCall(async (data: any, context: any) => {
+  try {
+    const original: string = data.message;
+    const uppercase: string = original.toUpperCase();
+    await admin.firestore().collection('Messages').add({ original, uppercase });
+    return uppercase;
+  } catch (error) {
+    console.error(error);
+  }
+});
+```
+
+Let's prove that you can't return async results to the front end.
+
+*index.ts*
+```js
+export const getUppercase2FirestoreAsyncAwait = functions.https.onCall((data: any, context: any) => {
+  admin.firestore().collection('Messages').doc('Ry7mrsEn7F1mNC8obM3H').get()
+    .then((doc) => {  // get the document with the ID "Ry7mrsEn7F1mNC8obM3H"));
+      if (doc.exists) {
+        console.log("Document data:", doc.data());
+        return doc.data();
+      } else {
+        // doc.data() will be undefined in this case
+        console.log("No such document!");
+        return 0;
+      }
+    }).catch((error) => {  // catch any errors
+      console.log("Error getting document:", error);
+      return 0;
+    });
+});
+```
+
+This will return `null` to the front end.
 
 ## Cloud Firestore `get()`, `set()`, `update()`, `delete()`
 
