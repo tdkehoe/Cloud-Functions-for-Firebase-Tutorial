@@ -926,6 +926,65 @@ Cloud Firestore stores data: objects, arrays, strings, numbers, etc. Cloud Stora
 
 There's no set of commands like `set()`, `get()`, `update()`, `delete()`. Instead, you use Node.js to handle files. Node.js has a steep learning curve. The Firebase team put together [code samples](https://cloud.google.com/nodejs/docs/reference/storage/latest) for just about anything you might want to do with Cloud Storage. 
 
+### Get a Storage bucket
+
+There are two ways to hook up Storage in your Cloud Functions. 
+
+#### Google Cloud Functions
+
+You can use Google Cloud Functions.
+
+```js
+const { Storage } = require('@google-cloud/storage'); // Imports the Google Cloud client library
+const storage = new Storage(); // Creates a client
+const bucketName = 'gs://my-project.appspot.com'; // The ID of your GCS bucket
+const bucket = storage.bucket('my-project.appspot.com');
+
+export const Write2Storage = functions.firestore.document('Users/{userID}/Storage/Request').onUpdate((change) => {
+  async function uploadFromMemoryToStorage() {
+      file = await got(someAPI); // download the file from an API
+      await storage.bucket(bucketName).file('Pictures').save(file['rawBody']); // write a file to Storage
+      console.log(
+        `${destFileName} with contents ${someAPI} uploaded to ${bucketName}.`
+      );
+  }
+  return uploadFromMemoryToStorage().catch(console.error);
+});
+```
+
+#### Cloud Functions for Firebase
+
+Firebase Cloud Functions are Google Cloud Functions with some extra stuff.
+
+```js
+admin.initializeApp({
+  apiKey: 'abc123',
+  ...
+  storageBucket: 'gs://my-project.appspot.com',
+});
+
+const { getStorage } = require('firebase-admin/storage');
+const bucket = getStorage().bucket();
+
+export const Write2Storage = functions.firestore.document('Users/{userID}/Storage/Request').onUpdate((change) => {
+  async function uploadFromMemoryToStorage() {
+      file = await got(someAPI); // download the file from an API
+      await admin.storage.bucket(bucket).file('Pictures').save(file['rawBody']); // write the file to Storage
+      console.log(
+        `${destFileName} with contents ${someAPI} uploaded to ${bucket}.`
+      );
+  }
+  return uploadFromMemoryToStorage().catch(console.error);
+});
+```
+
+Firebase is preferable over Google Cloud Functions because
+
+- `storageBucket` is configured in from your Firebase settings.
+- Two lines instead of four hook up Storage.
+- I'm not sure how the Google Cloud Functions got `bucket` and `bucketName`. That's confusing.
+- Your Storage code starts with `admin`, just like your Firestore code.
+
 ### `uploadBytes` from your app or front end
 
 Cloud Storage has [easy to use commands](https://firebase.google.com/docs/storage/web/upload-files):` uploadBytes()` and `uploadString()`. `uploadBytes` is a method for writing a file to Storage. These commands are for your app or front end. Consider structuring your code to handle files from your app or front end. For example, your app calls a Cloud Functions that calls an API to get a file, and then the Cloud Functions writes the file to Cloud Storage. If you can instead get a download URL then pass the download URL from your Cloud Function back to your app or front end, and then use `uploadBytes()` to write the file to Cloud Storage.
