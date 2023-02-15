@@ -311,7 +311,7 @@ I don't use Express so I won't talk about calling Cloud Functions with HTTP requ
 
 To execute a Cloud Function from your app or front-end framework, write a HTTPS callable Cloud Function. The code is simple, the execution is fast, and your Cloud Functions returns the resulting data to your app or front-end.
 
-You can trigger a Cloud Function by writing to your database from your app or front-end framework but this isn't as good. It's more code, especially if you want to return data to your app or front end. And writing to your database is slower. If your app or front-end wants to get data from an API, when the data comes back your Cliud Function has to write the data to your database. Then you set up an Observer in your app or front-end to listen for changes in your database. This is a lot of code. Then when the data comes back you'll want to unsubscribe the listener. I haven't found a clean way to unscubscribe the listener when the data comes back.
+You can trigger a Cloud Function by writing to your database from your app or front-end framework but this isn't as good. It's more code, especially if you want to return data to your app or front end. And writing to your database may be slower. If your app or front-end wants to get data from an API, when the data comes back your Cloud Function has to write the data to your database. Then you set up an Observer in your app or front-end to listen for changes in your database. This is a lot of code. Then when the data comes back you'll want to unsubscribe the listener. I haven't found a clean way to unsubscribe the listener when the data comes back.
 
 If you want to use a listener for a long time, i.e., for many data changes in your database, then triggering a Cloud Function with a database write might make sense. But if your app or front-end calls a Cloud Function to get data once from an API, this isn't what listeners are good at. It's better to use a HTTPS callable Cloud Function.
 
@@ -954,8 +954,9 @@ export const Write2Storage = functions.firestore.document('Users/{userID}/Storag
 
 #### Cloud Functions for Firebase
 
-Firebase Cloud Functions are Google Cloud Functions with some extra stuff.
+There is a [firebase-admin.storage package](https://firebase.google.com/docs/reference/admin/node/firebase-admin.storage). The package has a method, `getStorage()`, for hooking up Storage in Cloud Functions.
 
+*index.ts*
 ```js
 admin.initializeApp({
   apiKey: 'abc123',
@@ -965,7 +966,12 @@ admin.initializeApp({
 
 const { getStorage } = require('firebase-admin/storage');
 const bucket = getStorage().bucket();
+```
 
+This creates a `Storage` class with two methods, `Storage.app` and `Storage.bucket()`. The documentation doesn't give examples of using these methods. The following code doesn't work.
+
+*index.ts*
+```js
 export const Write2Storage = functions.firestore.document('Users/{userID}/Storage/Request').onUpdate((change) => {
   async function uploadFromMemoryToStorage() {
       file = await got(someAPI); // download the file from an API
@@ -977,8 +983,6 @@ export const Write2Storage = functions.firestore.document('Users/{userID}/Storag
   return uploadFromMemoryToStorage().catch(console.error);
 });
 ```
-
-I can't get my Cloud Function to write to Storage with the Firebase hookup. I use the Google Cloud Functions hookup.
 
 ### `uploadBytes` from your app or front end
 
