@@ -978,12 +978,7 @@ export const Write2Storage = functions.firestore.document('Users/{userID}/Storag
 });
 ```
 
-Firebase is preferable over Google Cloud Functions because
-
-- `storageBucket` is configured in from your Firebase settings.
-- Two lines instead of four hook up Storage.
-- I'm not sure how the Google Cloud Functions got `bucket` and `bucketName`. That's confusing.
-- Your Storage code starts with `admin`, just like your Firestore code.
+I can't get my Cloud Function to write to Storage with the Firebase hookup. I use the Google Cloud Functions hookup.
 
 ### `uploadBytes` from your app or front end
 
