@@ -539,11 +539,23 @@ As noted above, sometimes you get a CORS error when calling a Cloud Function fro
 Access to fetch at 'https://us-central1-my-project.cloudfunctions.net/myFunction' from origin 'http://localhost:4200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 ```
 
-CORS errors seem to occur randomly. A function that was working will throw a CORS error, with no changes to the code.
+If the CORS error occurs with the emulator, deploy to the Firebase cloud. I find that the emulator throws CORS errors with `onCall` functions, but not with `onDocumentCreated` functions. I don't know a way to fix this so I don't use the emulator with `onCall` functions.
 
 There are multiple ways to fix a CORS error, depending on your situation.
 
+#### `{ cors: true }` in `onRequest` 2nd generation functions
+
+Second generation `onRequest` functions can handle CORS:
+
+```js
+export const UppercaseMe2ndGen = onRequest({ cors: true }, (request) => {
+```
+
+You can set up rules such as allowing only requests from your Flutter app.
+
 #### IAM service accounts
+
+I don't understand how IAM service accounts fix CORS problems. They might not, perhaps I'm ascribing magical powers to service accounts!
 
 If your Cloud Functions use a service account for your credentials you must provide principals and roles to invoke your Cloud Functions.
 
