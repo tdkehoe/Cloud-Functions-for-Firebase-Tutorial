@@ -266,6 +266,10 @@ const firebaseApp = initializeApp(environment.firebase);
 const firestore = getFirestore(firebaseApp); //
 ```
 
+#### Where's my server location?
+
+Occasionally you'll need to write a URL which includes your server location. This is not in your Firebase console settings. Your server location can be seen in your list of functions in the Firebase console.
+
 ### Start emulators
 
 Gentleman, start your emulators!
