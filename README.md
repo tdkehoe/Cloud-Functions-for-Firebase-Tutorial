@@ -793,9 +793,9 @@ This Cloud Function returns an UPPERCASE string, if successful, or returns 0 if 
 
 ### Asynchronous Cloud Functions
 
-Asynchronous Cloud Functions must return a promise to prevent the Cloud Function from terminating prematurely. `return` will always be `null` with async Cloud Functions because `return` is synchronous (`return` executes before the asycn results come back). 
+Asynchronous Cloud Functions must return a promise to prevent the Cloud Function from terminating prematurely. `return` will always be `null` with async Cloud Functions because `return` is synchronous (`return` executes before the async results come back). 
 
-Terminate async Cloud Functions by returning the database call:
+Terminate async Cloud Functions by returning the database (Firestore) call:
 
 *index.ts*
 ```js
@@ -827,6 +827,7 @@ export const writeUppercase2FirestoreAsyncAwait = functions.https.onCall(async (
     return uppercase;
   } catch (error) {
     console.error(error);
+    return null
   }
 });
 ```
