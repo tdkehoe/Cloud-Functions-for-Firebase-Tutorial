@@ -758,7 +758,7 @@ As far as I can tell that's as far as you can get in Cloud Functions with Fireba
 
 Just to confuse you, the Firestore documentation says that Web version 9 is modular and Web version 8 is namespaced, when in the Firebase Admin SDK version 10 is modular and version 9 is namespaced.
 
-## Terminate Cloud Functions and (maybe) return results from callable Cloud Functions: Synchronous vs async
+## Terminate Cloud Functions and return results from callable Cloud Functions: Synchronous vs async
 
 Cloud Functions must be [terminated](https://firebase.google.com/docs/functions/terminate-functions) to avoid excessive billing charges. 
 
