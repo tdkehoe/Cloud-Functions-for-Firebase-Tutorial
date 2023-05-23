@@ -793,29 +793,44 @@ This Cloud Function returns an UPPERCASE string, if successful, or returns 0 if 
 
 ### Asynchronous Cloud Functions
 
-Asynchronous Cloud Functions must return a promise to prevent the Cloud Function from terminating prematurely. `return` will always be `null` with async Cloud Functions because `return` is synchronous (`return` executes before the async results come back). 
+Returning a result from an async cloud function is challenging. `return` is synchronous and will usually execute before the async results come back. But we can use `async await` to return async results. Let's examine an example.
 
-Terminate async Cloud Functions by returning the database (Firestore) call:
+*index.ts*
+```js
+export const Call_IBM_IPA = onCall(async (request) => {
+   ...
+   let results: string | null = null;
+   await textToSpeech.getPronunciation(getPronunciationParams)
+     .then(pronunciation => {
+       results = pronunciation.result.pronunciation;
+     })
+     .catch(error => {
+        return 'error:' + error
+     });
+   return results;
+}
+```
+
+First, note where `async` goes. We'll skip the code that sets up the API call. We then make a variable to hold the results of the API call. Then we have `await` and the API call, which returns a promise. When the results come in we assign them in the `results` variable. `return` then sends the results to the Angular front end handler function that called the cloud function.
+
+Let's look at another example. This returns `null` to the Angular handler function, writes the results to the database, and logs "Write succeeded!" to the Cloud Functions console. It returns `null` to the front end because we're not using `async await`.
 
 *index.ts*
 ```js
 export const writeUppercase2FirestorePromise = functions.https.onCall((data: any, context: any) => {
-  console.table(data);
   const original: string = data.message;
   const uppercase: string = original.toUpperCase();
   return admin.firestore().collection('Messages').add({ original, uppercase })
     .then(() => {
-      console.log('Write succeeded!');
+      logger.log('Write succeeded!');
     })
     .catch((error: any) => {
-      console.error(error);
+      logger.error(error);
     });
 });
 ```
 
-The result will return `null` to the front end and then log "Write succeeded!" to the Cloud Functions console.
-
-Async await. Note that `async` goes into the parameters of `onCall`.
+One more example of `async await`.
 
 *index.ts*
 ```js
@@ -824,15 +839,16 @@ export const writeUppercase2FirestoreAsyncAwait = functions.https.onCall(async (
     const original: string = data.message;
     const uppercase: string = original.toUpperCase();
     await admin.firestore().collection('Messages').add({ original, uppercase });
+    logger.log(uppercase);
     return uppercase;
   } catch (error) {
-    console.error(error);
-    return null
+    logger.error(error);
+    return error
   }
 });
 ```
 
-Let's prove that you can't return async results to the front end.
+And one more example of how not to return async results to the front end.
 
 *index.ts*
 ```js
@@ -845,16 +861,16 @@ export const getUppercase2FirestoreAsyncAwait = functions.https.onCall((data: an
       } else {
         // doc.data() will be undefined in this case
         console.log("No such document!");
-        return 0;
+        return null;
       }
     }).catch((error) => {  // catch any errors
       console.log("Error getting document:", error);
-      return 0;
+      return null;
     });
 });
 ```
 
-This will return `null` to the front end.
+This will return `null` to the front end because we're not using `async await`.
 
 ## Cloud Firestore `get()`, `set()`, `update()`, `delete()`
 
