@@ -768,6 +768,25 @@ Triggerable async Cloud Functions can't return anything to the front end, unless
 
 Cloud Function operations with Storage can't be observed or returned to the front end.
 
+### In Angular
+
+*component.ts*
+```js
+callMe() {
+    const callIBMIPA = httpsCallable(this.functions, 'Call_IBM_IPA');
+    callIBMIPA({
+      format: 'ipa',
+      voice: voices[0].voice,
+      word: word,
+    })
+     .then((pronunciation) => {
+        console.log(pronunciation.data as string)
+    });
+}
+```
+
+The Angular component sets up a call to a cloud function, calls the cloud function, then uses a promise to get the result. No `async await` is needed in the Angular handler function.
+
 ### Return synchronous results and terminate Cloud Function
 
 All Cloud Functions must terminate with `return`. Even if you don't need anything returned, terminate with `return 0`. If you don't do this you'll see an error in your logs.
