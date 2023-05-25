@@ -325,7 +325,7 @@ If your Cloud Function triggers from events in your database, not from your app 
 
 Copy and paste this Cloud Function in `index.ts`:
 
-*index.js*
+*index.ts*
 ```js
 export const upperCaseMe = functions.https.onCall((data, context) => {
     const original: string = data.text;
@@ -435,6 +435,7 @@ export class AppComponent {
 
   callMe() {
     console.log("Calling Cloud Function: " + this.messageText);
+    connectFunctionsEmulator(this.functions, "127.0.0.1", 5001);
     const upperCaseMe = httpsCallable(this.functions, 'upperCaseMe');
     // const upperCaseMe = httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/my-projectId/us-central1/upperCaseMe');
     upperCaseMe({ text: this.messageText })
@@ -502,7 +503,7 @@ Your function was killed because it raised an unhandled error.
 
 `I` is "information, `W` means "warning".
 
-For reasons I don't understand, a callable function executes twice.
+A callable function executes twice. I don't know why.
 
 You can see the log from the line `functions.logger.log('upperCaseMe', original, uppercase);`. You could use `console.log` instead. The [Cloud Functions logger SDK](https://firebase.google.com/docs/functions/writing-and-viewing-logs) has many features specific to Firebase. 
 
@@ -525,7 +526,27 @@ functions.https.onCall((data, context)
 
 Comment out the line with `httpsCallable` and comment in the line with `httpsCallableFromURL`. Change `my-projectId` in the URL to your `projectId` in `environment.ts`.
 
-Run your code again. A Firebase team member told me, "`httpsCallableFromURL` is for cases when you cannot use the normal way that the SDK locates the backend, for example, if you are hosting the callable function on some service that is not a normal Cloud Functions backend, or you are trying to invoke a function in a project that's not part of your app."
+One difference between `httpsCallable` and `httpsCallableFromURL` is that `httpsCallable` will call the cloud function in the Google cloud unless you specify, a the top of the cloud function, that you want to call the emulator with `connectFunctionsEmulator()`:
+
+*app.component.ts*
+```js
+ callMe() {
+    connectFunctionsEmulator(this.functions, "127.0.0.1", 5001); // <-- this line
+    const upperCaseMe = httpsCallable(this.functions, 'upperCaseMe');
+    // const upperCaseMe = httpsCallableFromURL(this.functions, 'http://127.0.0.1:5001/my-projectId/us-central1/upperCaseMe');
+    upperCaseMe({ text: this.messageText })
+      .then((result) => {
+        console.log(result.data)
+      })
+      .catch((error) => {
+        console.error(error);
+      });;
+  };
+```
+
+Comment out `connectFunctionsEmulator()` when you want to run your function in the cloud. 
+
+A Firebase team member told me, "`httpsCallableFromURL` is for cases when you cannot use the normal way that the SDK locates the backend, for example, if you are hosting the callable function on some service that is not a normal Cloud Functions backend, or you are trying to invoke a function in a project that's not part of your app."
 
 In other words, you shouldn't need to use `httpsCallableFromURL`. However, I've twice had `httpsCallable` fail and `httpsCallableFromURL` work. In the first case, `httpsCallable` repeatedly threw a CORS error but `httpsCallableFromURL` executed without error. Then when I tried `httpsCallable` again it executed without the CORS error.
 
@@ -543,7 +564,7 @@ As noted above, sometimes you get a CORS error when calling a Cloud Function fro
 Access to fetch at 'https://us-central1-my-project.cloudfunctions.net/myFunction' from origin 'http://localhost:4200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 ```
 
-If the CORS error occurs with the emulator, deploy to the Firebase cloud. I find that the emulator throws CORS errors with `onCall` functions, but not with `onDocumentCreated` functions. I don't know a way to fix this so I don't use the emulator with `onCall` functions.
+First, this error message often is thrown by something other than a CORS error. In other, you could go down a rabbit hole looking for a CORS error. If you call a function in the cloud before you've deployed the function, or in the emulator before you've compiled the function (`npm run build`), you'll get the CORS error. If you call a function in the emulator without connecting the emulator (`connectFunctionsEmulator()`) you'll get the CORS error.
 
 There are multiple ways to fix a CORS error, depending on your situation.
 
@@ -596,7 +617,7 @@ The CORS error message asks you to put `Access-Control-Allow-Origin` in the head
 
 This didn't work for me when my Angular app was running locally at `http://localhost:4200/home`.
 
-#### Imports `cors` with `onRequest`
+#### Import `cors` with `onRequest`
 
 If you call your Cloud Function with `onRequest` (not `onCall` or `onCreate`) you can import the npm module `cors` into your Cloud Functions. The following code is for JavaScript. [This question](https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) shows how to use this in TypeScript. I don't use `onRequest`.
 
