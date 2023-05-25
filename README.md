@@ -870,7 +870,7 @@ export const writeUppercase2FirestorePromise = functions.https.onCall((data: any
 });
 ```
 
-One more example of `async await`.
+Another example of `async await`.
 
 *index.ts*
 ```js
@@ -888,7 +888,7 @@ export const writeUppercase2FirestoreAsyncAwait = functions.https.onCall(async (
 });
 ```
 
-And one more example of how not to return async results to the front end.
+And another more example of how not to return async results to the front end.
 
 *index.ts*
 ```js
@@ -911,6 +911,42 @@ export const getUppercase2FirestoreAsyncAwait = functions.https.onCall((data: an
 ```
 
 This will return `null` to the front end because we're not using `async await`.
+
+Finally, how to return results from Firestore in a nested function.
+
+*index.ts*
+```js
+export const Call_Word_Request = onCall(async (request: any) => { // <-- async callable function
+  const language1: Language = request.data.language1;
+  const language2: Language = request.data.language2;
+  const word: string = request.data.word;
+  const requestOrigin: string = request.data.requestOrigin;
+  let thousandsOfWords: string[] = thousandsOfEnglishWords
+  let results: any = null; // <-- results to be returned to Angular
+
+  async function writeWordObjectToFirestore() { // <-- async inner function
+    await admin.firestore().collection('Dictionaries').doc(language2.long).collection('Words').doc(word).set({ // <-- call Firestore and await for result
+      addedByName: 'DictionaryBuilder',
+      dateAdded: yearMonthDay,
+      frequency: wordFrequency,
+      longLanguage: language2.long,
+      requestOrigin: requestOrigin,
+      shortLanguage: language2.short,
+      timeAdded: Date.now(),
+      word: word,
+    }, { merge: true })
+      .then(result => { // <-- result from Firestore
+        results = result.writeTime; // {_seconds: 1685047282, _nanoseconds: 305252000}
+      })
+      .catch(error => {
+        logger.error(error);
+      });
+      return results // <-- return results from inner function to cloud function
+  };
+
+  return await writeWordObjectToFirestore(); // <-- await for results from inner function, return results to Angular
+}); 
+```
 
 ## Cloud Firestore `get()`, `set()`, `update()`, `delete()`
 
