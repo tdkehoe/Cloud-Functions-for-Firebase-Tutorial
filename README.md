@@ -580,6 +580,8 @@ You can set up rules such as allowing only requests from your Flutter app.
 
 #### IAM service accounts
 
+https://stackoverflow.com/questions/73821144/authorize-access-to-google-cloud-translate-from-firebase-cloud-function
+
 I don't understand how IAM service accounts fix CORS problems. They might not, perhaps I'm ascribing magical powers to service accounts!
 
 If your Cloud Functions use a service account for your credentials you must provide principals and roles to invoke your Cloud Functions.
