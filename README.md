@@ -564,7 +564,7 @@ As noted above, sometimes you get a CORS error when calling a Cloud Function fro
 Access to fetch at 'https://us-central1-my-project.cloudfunctions.net/myFunction' from origin 'http://localhost:4200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 ```
 
-First, this error message often is thrown by something other than a CORS error. In other, you could go down a rabbit hole looking for a CORS error. If you call a function in the cloud before you've deployed the function, or in the emulator before you've compiled the function (`npm run build`), you'll get the CORS error. If you call a function in the emulator without connecting the emulator (`connectFunctionsEmulator()`) you'll get the CORS error.
+First, this error message often is thrown by something other than a CORS error. In other words, you could go down a rabbit hole looking for a CORS error. If you call a function in the cloud before you've deployed the function, or in the emulator before you've compiled the function (`npm run build`), you'll get the CORS error. If you call a function in the emulator without connecting the emulator (`connectFunctionsEmulator()`) you'll get the CORS error.
 
 There are multiple ways to fix a CORS error, depending on your situation.
 
