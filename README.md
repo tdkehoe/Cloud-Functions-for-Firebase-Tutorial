@@ -1452,9 +1452,9 @@ firebase deploy --only functions:upperCaseMe --service-account google-cloud-tran
 
 `gcloud functions deploy` doesn't work with TypeScript. It looks for `lib/index.js` in the `src` directory, not in the parent directory.
 
-### The "Project 563584335869" error
+### The "Project 563584335869" error with Firebase Emulators
 
-I was getting this error with Cloud Functions in the Firebase Emulators:
+You might get this error with Cloud Functions in the Firebase Emulators:
 
 ```
 Cloud Translation API has not been used in project 563584335869 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/translate.googleapis.com/overview?project=563584335869 then retry.
@@ -1462,7 +1462,7 @@ Cloud Translation API has not been used in project 563584335869 before or it is 
 
 Going to that URL throws an error: `You do not have sufficient permissions to view this page`. 
 
-I'll nominate that error message for Misleading Error Message of the Month. It's saying that your service account is missing a role. Go to your Google Cloud Console and check if your Cloud Functions service account has all necessary roles, including `Firebase Admin`.
+I'll nominate that error message for Misleading Error Message of the Month. `563584335869` isn't your project, it's the Firebase Emulators project number. It usually means that you have a Google Cloud authorization problem. This might be solved by hooking up your service account (above) or by checking that your service account has all necessary roles, including `Firebase Admin`.
 
 # Use Functions in your Firebase Console
 
