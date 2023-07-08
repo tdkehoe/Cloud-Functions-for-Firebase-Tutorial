@@ -564,7 +564,7 @@ As noted above, sometimes you get a CORS error when calling a Cloud Function fro
 Access to fetch at 'https://us-central1-my-project.cloudfunctions.net/myFunction' from origin 'http://localhost:4200' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 ```
 
-First, this error message often is thrown by something other than a CORS error. In other words, you could go down a rabbit hole looking for a CORS error. If you call a function in the cloud before you've deployed the function, or in the emulator before you've compiled the function (`npm run build`), you'll get the CORS error. If you call a function in the emulator without connecting the emulator (`connectFunctionsEmulator()`) you'll get the CORS error.
+First, this error message often is thrown by something other than a CORS error. In other words, you could go down a rabbit hole looking for a CORS error. If you call a function in the cloud before you've deployed the function, or in the emulator before you've compiled the function (`npm run build`), you'll get a CORS error. If you call a function in the emulator without connecting the emulator (`connectFunctionsEmulator()`) you'll get a CORS error.
 
 There are multiple ways to fix a CORS error, depending on your situation.
 
@@ -621,7 +621,7 @@ This didn't work for me when my Angular app was running locally at `http://local
 
 #### Import `cors` with `onRequest`
 
-If you call your Cloud Function with `onRequest` (not `onCall` or `onCreate`) you can import the npm module `cors` into your Cloud Functions. The following code is for JavaScript. [This question](https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) shows how to use this in TypeScript. I don't use `onRequest`.
+If you call your Cloud Function with `onRequest` (not `onCall` or `onCreate`) you can import the npm module `cors` into your Cloud Functions. The following code is for JavaScript. [This question](https://stackoverflow.com/questions/42755131/enabling-cors-in-cloud-functions-for-firebase) shows how to use this in TypeScript.
 
 *index.js*
 ```
@@ -634,7 +634,40 @@ exports.fn = functions.https.onRequest((req, res) => {
 });
 ```
 
-#### The emulator URL
+#### Call GoogleAuth, which calls your Cloud Function
+
+Here's another way to fix a CORS error. This looks complicated but works well when your Cloud Function needs to access an Google Cloud API (e.g., Cloud Translate). 
+
+First, your Angular front-end app calls the GoogleAuth app:
+
+```js
+ const Call_Google_Auth = httpsCallableFromURL(this.functions, 'https://us-central1-languagetwo-cd94d.cloudfunctions.net/Call_Google_Auth');
+
+    const request = {
+      contents: ["لا تقلل من شأن أي شخص"], // must be an array
+      source_language_code: "ar",
+      longLanguage: "Arabic",
+    };
+
+    // let response = await Call_Google_Romanize(request);
+    let response = await Call_Google_Auth(request);
+    console.table(response.data);
+
+    // make listener
+    const unsub = onSnapshot(doc(this.firestore, 'Dictionaries/' + this.language2.long + '/Words/' + request.contents), (doc) => {
+      console.log("Current data: ", doc.data());
+    });
+}
+```
+
+
+
+
+
+
+
+
+## The emulator URL
 
 With `httpsCallableFromURL` the URL is crucial. With the emulator, the URL has four parts:
 
