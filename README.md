@@ -1052,7 +1052,7 @@ export const getUppercase2FirestoreAsyncAwait = functions.https.onCall((data: an
 
 This will return `null` to the front end because we're not using `async await`.
 
-Finally, how to return results from Firestore in a nested function.
+How to return results from Firestore in a nested function.
 
 *index.ts*
 ```js
@@ -1087,6 +1087,8 @@ export const Call_Word_Request = onCall(async (request: any) => { // <-- async c
   return await writeWordObjectToFirestore(); // <-- await for results from inner function, return results to Angular
 }); 
 ```
+
+Finally, if all else fails, write the result to Firestore and make a listener in your front end Angular app. The section on CORS errors has an example of this.
 
 ## Cloud Firestore `get()`, `set()`, `update()`, `delete()`
 
