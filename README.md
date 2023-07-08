@@ -636,12 +636,14 @@ exports.fn = functions.https.onRequest((req, res) => {
 
 #### Call GoogleAuth, which calls your Cloud Function
 
-Here's another way to fix a CORS error. This looks complicated but works well when your Cloud Function needs to access an Google Cloud API (e.g., Cloud Translate). 
+Here's another way to fix a CORS error. This looks complicated but works well when your Cloud Function accesses a Google Cloud API (e.g., Cloud Translate). 
 
-First, your Angular front-end app calls the GoogleAuth app:
+First, your Angular front-end app calls the GoogleAuth app. A request object is sent with several properties. We also make a Firestore listener to get the results back.
 
 ```js
- const Call_Google_Auth = httpsCallableFromURL(this.functions, 'https://us-central1-languagetwo-cd94d.cloudfunctions.net/Call_Google_Auth');
+async callMe() {
+  const Call_Google_Romanize = httpsCallableFromURL(this.functions, 'https://us-central1-languagetwo-cd94d.cloudfunctions.net/Call_Google_Romanize_HTTP');
+  // const Call_Google_Auth = httpsCallableFromURL(this.functions, 'https://us-central1-languagetwo-cd94d.cloudfunctions.net/Call_Google_Auth');
 
     const request = {
       contents: ["لا تقلل من شأن أي شخص"], // must be an array
@@ -649,9 +651,7 @@ First, your Angular front-end app calls the GoogleAuth app:
       longLanguage: "Arabic",
     };
 
-    // let response = await Call_Google_Romanize(request);
     let response = await Call_Google_Auth(request);
-    console.table(response.data);
 
     // make listener
     const unsub = onSnapshot(doc(this.firestore, 'Dictionaries/' + this.language2.long + '/Words/' + request.contents), (doc) => {
@@ -660,12 +660,117 @@ First, your Angular front-end app calls the GoogleAuth app:
 }
 ```
 
+In `index.js` let's make the second Cloud Function first.
 
+*index.js*
+```js
+export const Call_Google_Romanize_HTTP = onRequest(async (request: any, response: any) => {
+  const options = {
+    headers: {
+      "Authorization": "Bearer 12345abcde",
+      // "Authorization": "Bearer " + request.body.token,
+      "x-goog-user-project": "languagetwo-cd94d",
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    json: {
+      "source_language_code": request.body.source_language_code,
+      "contents": request.body.contents,
+    }
+  };
 
+  response = await got.post("https://translation.googleapis.com/v3/projects/languagetwo-cd94d/locations/us-central1:romanizeText", options).json()
+    .then((response: any) => {
+      admin.firestore().collection('Dictionaries').doc(request.body.longLanguage).collection('Words').doc(request.body.contents[0]).set({
+        'romanizedText': response.romanizations[0].romanizedText
+      })
+        .then() // do nothing
+        .catch(error => logger.error(error));
+    })
+    .catch((error: any) => {
+      logger.log(error);
+    });
+});
+```
 
+The first code block sets up the API call. The key line is `"Authorization":`. This is the *access code* for the API. Generate a manual access code from the CLI:
 
+```
+gcloud auth application-default print-access-token
+```
 
+This [documentation](https://cloud.google.com/sdk/gcloud/reference/auth/application-default/print-access-token) explains manually generating access codes.
 
+Cut and paste your access code after `"Authorization":` preceded by `Bearer`. Bearer means this is a bearer token.
+
+Call your Cloud Function from your front end Angular app and check that it works. You should see the results in your front end console.
+
+Your access code token will last one hour. Let's programmatically generate a new access code every time we call the Cloud Function.
+
+Make another Cloud Function before the previous function.
+
+```js
+export const Call_Google_Auth = onCall(async (request) => {
+  const targetAudience = 'https://us-central1-languagetwo-cd94d.cloudfunctions.net/Call_Google_Romanize_HTTP';
+  const url = targetAudience;
+
+  const { GoogleAuth } = require('google-auth-library');
+  const auth = new GoogleAuth();
+
+  const token = await new GoogleAuth({
+    scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+  }).getAccessToken();
+  request.data.token = token;
+
+  async function authRequest() {
+    const client = await auth.getIdTokenClient(targetAudience);
+    const res = await client.request({
+      url: url,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+      body: JSON.stringify(request.data),
+    })
+    console.info(res.body);
+  };
+
+  authRequest()
+    .then(() => {
+      return 0;
+    })
+    .catch(err => {
+      console.error(err.message);
+      process.exitCode = 1;
+      return 0;
+    });
+});
+```
+
+This [documentation](https://cloud.google.com/functions/docs/securing/authenticating#generating_tokens_programmatically) explains programmatically generating bearer tokens.
+
+In your front end Angular app, comment out the call to the second Cloud Function and comment in your GoogleAuth Cloud Function.
+
+`targetAudience` is the URL of your second Cloud Function. 
+
+We call `GoogleAuth()` twice. First, we call with `getAccessToken()`, then put the result onto the request data object.
+
+Next, we call with `getIdTokenClient()`. We then use this ID token we can call the second Cloud Function.
+
+Why two types of tokens? There are five or six [token types](https://cloud.google.com/docs/authentication/token-types):
+
+* Access tokens
+* ID tokens
+* Self-signed JWTs
+* Refresh tokens
+* Federated tokens
+* Bearer tokens
+
+ID tokens are special type of JavaScript Web Token (JWT). Access tokens, ID tokens, and JWTs are all bearer tokens. Here we need an *ID token* for the first Cloud Function to call the second Cloud Function. We need an *access token* for the second Cloud Function to call Cloud Translate. The access token is passed from the first Cloud Function to the second Cloud Function.
+
+This prevents a CORS error but it's now impossible to return the results from then second Cloud Function to the front end Angular app. We have to write the results to Firestore and make a listener in the front end Angular app.
 
 ## The emulator URL
 
