@@ -1237,31 +1237,56 @@ There's no set of commands like `set()`, `get()`, `update()`, `delete()`. Instea
 
 ### Get a Storage bucket
 
-You can hook up Storage in your Cloud Functions with either Google Cloud Functions or Cloud Functions for Firebase.
-
-#### Google Cloud Functions
-
-You can use Google Cloud Functions.
-
+*index.js*
 ```js
-const { Storage } = require('@google-cloud/storage'); // Imports the Google Cloud client library
+import { Storage } from '@google-cloud/storage'; // Imports the Google Cloud client library
 const storage = new Storage(); // Creates a client
-const bucketName = 'gs://my-project.appspot.com'; // The ID of your GCS bucket
-const bucket = storage.bucket('my-project.appspot.com');
-
-export const Write2Storage = functions.firestore.document('Users/{userID}/Storage/Request').onUpdate((change) => {
-  async function uploadFromMemoryToStorage() {
-      file = await got(someAPI); // download the file from an API
-      await storage.bucket(bucketName).file('Pictures').save(file['rawBody']); // write a file to Storage
-      console.log(
-        `${destFileName} with contents ${someAPI} uploaded to ${bucketName}.`
-      );
-  }
-  return uploadFromMemoryToStorage().catch(console.error);
-});
+const bucketName = 'gs://languagetwo-cd94d.appspot.com'; // The ID of your GCS bucket
 ```
 
-#### Cloud Functions for Firebase
+This code goes at the top of your `index.js` file, above the Cloud Functions. It sets up your Storage bucket.
+
+#### Saving with `rawBody`
+
+This function uses an undocumented feature `rawBody`.
+
+```js
+const destFileName = 'Audio/' + language2.long + '/' + word + '/' + pronunciation + '/' + wordFileType; // write to this location in Storage
+async function uploadFromMemoryToStorage() {
+      try {
+        file = await got(pronunciationObject.oedAudioDownloadURL![0]); // download the audio file from OED; refactor for multiple pronunciations
+        await storage.bucket(bucketName).file(destFileName).save(file['rawBody']); // write a file to Storage
+        await storage.bucket(bucketName).file(destFileName).makePublic();  // make the audio file public. The first download will change this to a token download URL. See second answer at https://stackoverflow.com/questions/42956250/get-download-url-from-file-uploaded-with-cloud-functions-for-firebase
+        let audioFile: string = 'https://storage.googleapis.com/languagetwo-cd94d.appspot.com/Audio/English/' + word + '/' + pronunciation + '/' + wordFileType;
+        let audioFiles: string[] = [];
+        audioFiles.push(audioFile);
+        // admin.firestore.FieldValue.arrayUnion(audioFile) documentation: https://firebase.google.com/docs/reference/js/v8/firebase.firestore.FieldValue#arrayunion
+        // FieldValues are sentinal values that indicate that something out of the ordinary has happened
+        // arrayUnion returns a special value that can be used with set() or update() that tells the server to union the given elements with any array value that already exists on the server. Each specified element that doesn't already exist in the array will be added to the end. If the field being modified is not already an array it will be overwritten with an array containing exactly the specified elements.
+        // await admin.firestore().collection('Dictionaries').doc(language2.long).collection('Words').doc(word).collection('Pronunciations').doc(pronunciation).set({ audioFiles: audioFiles }, { merge: true }); // this works adequately, the arrayUnion would be better but doesn,'t work, see if it works in the cloud
+        // logger.log(admin.firestore.FieldValue.arrayUnion(audioFile));
+        await admin.firestore().collection('Dictionaries').doc(language2.long).collection('Words').doc(word).collection('Pronunciations').doc(pronunciation).set({ audioFiles: admin.firestore.FieldValue.arrayUnion(audioFile) }, { merge: true }); // this version is intended to add new pronunciations to the array of audioFiles; FieldValue doesn't work in the emulator
+        // error: admin.firestore.FieldValue is undefined
+
+      } catch (error) {
+        console.error(error);
+      }
+}
+
+uploadFromMemoryToStorage()
+```
+
+First, a location is constructed in Storage to write to.
+
+Then the function uses the npm library `got` to make an HTTP request and download the audio file.
+
+Now we get to the fun part. We use `file(destFileName).save(file['rawBody'])` to write the file to Storage.
+
+[rawBody](https://cloud.google.com/functions/docs/writing/write-http-functions#parsing_http_requests) appears to differentiate a response body from a response `rawBody` to handle a large digital file.
+
+The rest is easy. The file is made public. Then the download URL is constructed and written to Firestore.
+
+#### Firebase `getStorage()` method
 
 There is a [firebase-admin.storage package](https://firebase.google.com/docs/reference/admin/node/firebase-admin.storage). The package has a method, `getStorage()`, for hooking up Storage in Cloud Functions.
 
@@ -1277,21 +1302,7 @@ const { getStorage } = require('firebase-admin/storage');
 const bucket = getStorage().bucket();
 ```
 
-This creates a `Storage` class with two methods, `Storage.app` and `Storage.bucket()`. The documentation doesn't give examples of using these methods. The following code doesn't work.
-
-*index.ts*
-```js
-export const Write2Storage = functions.firestore.document('Users/{userID}/Storage/Request').onUpdate((change) => {
-  async function uploadFromMemoryToStorage() {
-      file = await got(someAPI); // download the file from an API
-      await admin.storage.bucket(bucket).file('Pictures').save(file['rawBody']); // write the file to Storage
-      console.log(
-        `${destFileName} with contents ${someAPI} uploaded to ${bucket}.`
-      );
-  }
-  return uploadFromMemoryToStorage().catch(console.error);
-});
-```
+This creates a `Storage` class with two methods, `Storage.app` and `Storage.bucket()`. The documentation doesn't give examples of using these methods. I don't know how to use these.
 
 ### Write to Storage with Node `file` 
 
