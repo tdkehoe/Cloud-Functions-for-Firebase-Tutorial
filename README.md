@@ -1231,13 +1231,13 @@ admin.firestore().collection('Videos').doc(longLanguage).collection('Translation
 
 ## Cloud Storage
 
-Cloud Firestore stores data: objects, arrays, strings, numbers, etc. Cloud Storage stores files. Handling files is very different from handling data.
+Cloud Firestore stores data: objects, arrays, strings, numbers, etc. Cloud Storage stores large digital files, such as photos, music, and videos. Handling files is very different from handling data.
 
 There's no set of commands like `set()`, `get()`, `update()`, `delete()`. Instead, you use Node.js to handle files. Node.js has a steep learning curve. The Firebase team put together [code samples](https://cloud.google.com/nodejs/docs/reference/storage/latest) for just about anything you might want to do with Cloud Storage. 
 
 ### Get a Storage bucket
 
-There are two ways to hook up Storage in your Cloud Functions. 
+You can hook up Storage in your Cloud Functions with either Google Cloud Functions or Cloud Functions for Firebase.
 
 #### Google Cloud Functions
 
@@ -1293,9 +1293,87 @@ export const Write2Storage = functions.firestore.document('Users/{userID}/Storag
 });
 ```
 
+### Write to Storage with Node `file` 
+
+```js
+import textToSpeech = require('@google-cloud/text-to-speech');
+export const Call_Google_Text_to_Speech = onRequest(async (request: any, response: any) => {
+  try {
+    const text = request.body.data.word;
+    const longLanguage = request.body.data.language2.long;
+    const languageCode = request.body.data.language2.short;
+    const audioEncoding = request.body.data.audioEncoding;
+    const voiceGender = 'NEUTRAL' // request.body.data.voiceGender; // doesn't work when data is passed through
+    const voiceName = request.body.data.voiceName;
+
+    const client = new textToSpeech.TextToSpeechClient();
+
+    // construct the request to Google Cloud Text-to-Speech
+    const voiceRequest = {
+      input: { text: text },
+      voice: { languageCode: languageCode, ssmlGender: voiceGender }, // name: 'en-US-Wavenet-D',
+      audioConfig: { audioEncoding: audioEncoding },
+    };
+
+    const options = { // put in metadata
+      metadata: {
+        contentType: 'audio/mpeg',
+        metadata: {
+          source: 'Google Text-to-Speech'
+        }
+      }
+    };
+
+    const bucket = storage.bucket('languagetwo-cd94d.appspot.com');
+    const destFileName = 'Audio/' + longLanguage + '/' + text + '/' + voiceName + '/' + text + '.mp3'; // write to this location in Storage
+    var file = bucket.file(destFileName);
+
+    let audioFile: string = 'https://storage.googleapis.com/languagetwo-cd94d.appspot.com/Audio/' + longLanguage + '/' + text + '/' + voiceName + '/' + text + '.mp3'; // download URL
+    let audioFiles: string[] = [];
+    audioFiles.push(audioFile);
+
+    // Performs the text-to-speech request
+    // @ts-ignore error TS2345: Argument of type 'voiceRequest' is not assignable to parameter of type 'ISynthesizeSpeechRequest'
+    const [voiceResponse] = await client.synthesizeSpeech(voiceRequest); // await is necessary here despite what VSCode says
+    return await file.save(voiceResponse.audioContent, options)
+      .then(async () => {
+        await storage.bucket(bucketName).file(destFileName).makePublic();
+        console.log('Audio file written to Firebase Storage.');
+        await admin.firestore().collection('Dictionaries').doc(longLanguage).collection('Words').doc(text).collection('Pronunciations').doc(voiceName).set({ audioFiles: admin.firestore.FieldValue.arrayUnion(audioFile) }, { merge: true }); // this version is intended to add new pronunciations to the array of audioFiles; FieldValue doesn't work in the emulator
+      })
+      .catch((error: any) => {
+        logger.log(error);
+      });
+  } catch (error) {
+    logger.log(error);
+    return;
+  }
+});
+```
+
+This Cloud Function calls Google Cloud Text-to-Speech, downloads an audio file, and writes the audio file to Storage.
+
+The first code block takes the request body passed from the front end and makes local variables for the text, language, etc. Then another code block constructs the request to send to Google Cloud Text-to-Speech.
+
+The next code block adds metadata to the file.
+
+The next code block sets up the Storage bucket and the location in Storage.
+
+The next code block sets up the download URL. This code allows an array for multiple download URLs, for example, we could set up `.mp3` and `.webm` audio files.
+
+Now we get to the fun part. This Cloud Function confuses VSCode. `// @ts-ignore` in the first line makes the Cloud Function run without TypeScript errors.
+
+`client.synthesizeSpeech(voiceRequest)` calls Google Cloud Text-to-Speech and returns the audio file as `voiceResponse`.
+
+`file.save(voiceResponse.audioContent, options)` is the crux of the Cloud Function. This creates a file to be stored, with the metadata. Somehow it saves the file to Storage. I don't see how.
+
+After the promise is fulfilled, the `.then()` block makes the file public.
+
+Finally, the download URL is written to Firestore. Note that `FieldValue.arrayUnion()`, which allows adding elements to an existing array, doesn't work in the emulator.
+
 ### `uploadBytes` from your app or front end
 
-Cloud Storage has [easy to use commands](https://firebase.google.com/docs/storage/web/upload-files):` uploadBytes()` and `uploadString()`. `uploadBytes` is a method for writing a file to Storage. These commands are for your app or front end. Consider structuring your code to handle files from your app or front end. For example, your app calls a Cloud Functions that calls an API to get a file, and then the Cloud Functions writes the file to Cloud Storage. If you can instead get a download URL then pass the download URL from your Cloud Function back to your app or front end, and then use `uploadBytes()` to write the file to Cloud Storage.
+Cloud Storage has [easy to use commands](https://firebase.google.com/docs/storage/web/upload-files):` uploadBytes()` and `uploadString()`. `uploadBytes` is a method for writing a file to Storage. These commands are for your app or front end. Consider structuring your code to handle files from your app or front end. For example, your app calls a Cloud Function that calls an API to get a file, and then the Cloud Function writes the file to Cloud Storage. If you can instead get a download URL then pass the download URL from your Cloud Function back to your app or front end, and then use `uploadBytes()` to write the file to Cloud Storage.
 
 ### AngularFire Storage methods for your app or front end
 
@@ -1313,9 +1391,9 @@ Getting the download URL when uploading a file to Google/Firebase Cloud Storage 
 
 There are three types of download URLS:
 
- 1. signed download URLs, which are temporary and have security features
- 2. token download URLs, which are persistent and have security features
- 3. public download URLs, which are persistent and lack security
+ 1. *signed* download URLs, which are temporary and have security features
+ 2. *token* download URLs, which are persistent and have security features
+ 3. *public* download URLs, which are persistent and lack security
 
 There are three ways to get a token download URL. The other two download URLs have only one way to get them.
 
